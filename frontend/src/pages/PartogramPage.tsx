@@ -111,7 +111,10 @@ export const PartogramPage: React.FC = () => {
 
   const handleCloseLabour = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!labourId || !data || !data.partogram) return;
+    if (!labourId || !data || !data.partogram || !data.labour) return;
+
+    const partogramId = data.partogram.id;
+    const pregnancyId = data.labour.pregnancy_id;
 
     try {
       await db.transaction('rw', [db.labours, db.partograms, db.pregnancies, db.sync_queue], async () => {
@@ -123,13 +126,13 @@ export const PartogramPage: React.FC = () => {
         });
 
         // Update partogram
-        await db.partograms.update(data.partogram.id, {
+        await db.partograms.update(partogramId, {
           status: 'COMPLETED',
           completed_at: new Date().toISOString()
         });
 
         // Update pregnancy status
-        await db.pregnancies.update(data.labour.pregnancy_id, {
+        await db.pregnancies.update(pregnancyId, {
           status: 'DELIVERED'
         });
 
