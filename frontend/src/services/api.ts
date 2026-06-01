@@ -1,5 +1,6 @@
 import { db, type Patient, type Pregnancy, type Labour, type Partogram, type PartogramEntry, type Referral, type Ambulance, type Alert, type Facility } from './db';
 import { evaluateClinicalRules } from './alertEngine';
+import { syncManager } from './sync';
 
 // Simulates network latency
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -11,14 +12,71 @@ export const apiService = {
   },
 
   // --- Auth API ---
-  async login(email: string, _password?: string): Promise<{ token: string; user: any }> {
-    await delay(600);
+  async login(email: string, password?: string): Promise<{ token: string; user: any }> {
+    if (this.isOnline()) {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/v1/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ email, password: password || 'password' })
+        });
+ 
+        if (response.ok) {
+          const data = await response.json();
+          // Store token in local storage
+          localStorage.setItem('partocare_api_token', data.token);
+ 
+          // Cache profile locally in IndexedDB so it's available for offline login
+          const userObj = data.user;
+          await db.roles.put({
+            id: userObj.role.id,
+            name: userObj.role.name,
+            description: `${userObj.role.name} Account`
+          });
+          await db.facilities.put({
+            id: userObj.facility.id,
+            name: userObj.facility.name,
+            type: userObj.facility.type,
+            region: 'Centre',
+            district: 'Bafia',
+            address: '',
+            phone: '',
+            latitude: 0,
+            longitude: 0
+          });
+          await db.users.put({
+            id: userObj.id,
+            role_id: userObj.role.id,
+            facility_id: userObj.facility.id,
+            first_name: userObj.first_name,
+            last_name: userObj.last_name,
+            email: userObj.email,
+            phone: '',
+            status: 1
+          });
+ 
+          return data;
+        } else {
+          const errData = await response.json().catch(() => ({}));
+          throw new Error(errData.message || "Identifiants incorrects ou compte inexistant.");
+        }
+      } catch (err: any) {
+        console.warn("Online login failed, falling back to local database:", err);
+        if (err.message && err.message.includes("Identifiants incorrects")) {
+          throw err;
+        }
+      }
+    }
+ 
+    // Fallback/offline auth
     const user = await db.users.where('email').equalsIgnoreCase(email).first();
     if (!user) {
       throw new Error("Identifiants incorrects ou compte inexistant.");
     }
     
-    // Accept any password for testing convenience
     const role = await db.roles.get(user.role_id);
     const facility = await db.facilities.get(user.facility_id);
 
@@ -44,6 +102,27 @@ export const apiService = {
 
   // --- Dashboard Stats API ---
   async getDashboardStats(_facilityId: string): Promise<any> {
+    if (this.isOnline()) {
+      try {
+        const token = localStorage.getItem('partocare_api_token');
+        if (token) {
+          const response = await fetch('http://127.0.0.1:8000/api/v1/dashboard/stats', {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/json'
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            return data;
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch dashboard stats online, falling back to local:", err);
+      }
+    }
+ 
+    // Fallback/offline implementation
     await delay(300);
     const activeLabours = await db.labours
       .where('labour_status')
@@ -152,6 +231,10 @@ export const apiService = {
       created_at: new Date().toISOString()
     });
 
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
+
     return newPatient;
   },
 
@@ -182,6 +265,10 @@ export const apiService = {
       status: 'PENDING',
       created_at: new Date().toISOString()
     });
+
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
 
     return newPregnancy;
   },
@@ -219,6 +306,10 @@ export const apiService = {
         created_at: now
       });
     });
+
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
 
     return newLabour;
   },
@@ -308,6 +399,10 @@ export const apiService = {
       });
     });
 
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
+
     return {
       entry: newEntry,
       triggered_alerts: createdAlerts,
@@ -371,6 +466,10 @@ export const apiService = {
       });
     });
 
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
+
     return newReferral;
   },
 
@@ -399,6 +498,10 @@ export const apiService = {
       });
     });
 
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
+
     const updatedReferral = await db.referrals.get(referralId);
     const ambulance = await db.ambulances.get(ambulanceId);
 
@@ -414,16 +517,44 @@ export const apiService = {
     const ref = await db.referrals.get(referralId);
     if (!ref) throw new Error("Référence introuvable");
 
-    const updates: Partial<Referral> = { referral_status: status };
-    if (status === 'ADMITTED') {
-      updates.arrival_time = new Date().toISOString();
-      if (ref.ambulance_id) {
-        // Free up the ambulance
-        await db.ambulances.update(ref.ambulance_id, { status: 'available' });
+    const now = new Date().toISOString();
+    
+    await db.transaction('rw', [db.referrals, db.labours, db.ambulances, db.sync_queue], async () => {
+      const updates: Partial<Referral> = { referral_status: status };
+      
+      if (status === 'ADMITTED') {
+        updates.arrival_time = now;
+        
+        // Complete the labor locally as well
+        await db.labours.update(ref.labour_id, {
+          labour_status: 'COMPLETED',
+          outcome: 'HEALTHY_MOU'
+        });
+        
+        if (ref.ambulance_id) {
+          await db.ambulances.update(ref.ambulance_id, { status: 'available' });
+        }
+      } else if (status === 'DECLINED') {
+        // Reset labor back to active
+        await db.labours.update(ref.labour_id, {
+          labour_status: 'ACTIVE'
+        });
       }
+
+      await db.referrals.update(referralId, updates);
+      
+      await db.sync_queue.add({
+        action: 'UPDATE_REFERRAL_STATUS',
+        payload: { referralId, status, arrival_time: status === 'ADMITTED' ? now : undefined },
+        status: 'PENDING',
+        created_at: now
+      });
+    });
+
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
     }
 
-    await db.referrals.update(referralId, updates);
     return (await db.referrals.get(referralId))!;
   },
 

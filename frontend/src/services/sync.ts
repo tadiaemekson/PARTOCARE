@@ -103,15 +103,44 @@ class SyncManager {
     }
   }
 
-  // Simulate server upload endpoint
-  private async uploadToServer(_item: SyncQueueItem): Promise<boolean> {
-    return new Promise(resolve => {
-      setTimeout(() => {
-        // Simulates 95% API request success rate (simulating network hitches)
-        const isSuccessful = Math.random() < 0.95;
-        resolve(isSuccessful);
-      }, 500);
-    });
+  // Upload queue item to server
+  private async uploadToServer(item: SyncQueueItem): Promise<boolean> {
+    try {
+      const token = localStorage.getItem('partocare_api_token');
+      if (!token) {
+        console.warn('Sync postponed: No authenticated session/token found.');
+        return false;
+      }
+ 
+      const response = await fetch('http://127.0.0.1:8000/api/v1/sync', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          queue: [
+            {
+              id: item.id,
+              action: item.action,
+              payload: item.payload
+            }
+          ]
+        })
+      });
+ 
+      if (!response.ok) {
+        console.error(`Sync server error (${response.status}) for action ${item.action}`);
+        return false;
+      }
+ 
+      const data = await response.json();
+      return data.success === true && (!data.errors || data.errors.length === 0);
+    } catch (err) {
+      console.error('Error during sync network request:', err);
+      return false;
+    }
   }
 }
 
