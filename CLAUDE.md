@@ -1,0 +1,3 @@
+# PARTOCARE
+
+Placeholder CLAUDE.md

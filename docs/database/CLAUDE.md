@@ -1,0 +1,3 @@
+# database
+
+Placeholder CLAUDE.md

@@ -1,0 +1,3 @@
+# medical
+
+Placeholder CLAUDE.md

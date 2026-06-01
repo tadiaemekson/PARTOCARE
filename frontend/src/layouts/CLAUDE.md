@@ -1,0 +1,3 @@
+# layouts
+
+Placeholder CLAUDE.md

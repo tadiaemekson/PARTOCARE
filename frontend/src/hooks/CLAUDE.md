@@ -1,0 +1,3 @@
+# hooks
+
+Placeholder CLAUDE.md

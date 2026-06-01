@@ -1,0 +1,3 @@
+# seeders
+
+Placeholder CLAUDE.md

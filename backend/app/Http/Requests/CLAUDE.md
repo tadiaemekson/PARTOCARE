@@ -1,0 +1,3 @@
+# Requests
+
+Placeholder CLAUDE.md

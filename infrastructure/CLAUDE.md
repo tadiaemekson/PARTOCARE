@@ -1,0 +1,3 @@
+# infrastructure
+
+Placeholder CLAUDE.md

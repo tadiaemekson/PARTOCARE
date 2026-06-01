@@ -1,0 +1,3 @@
+# backend
+
+Placeholder CLAUDE.md

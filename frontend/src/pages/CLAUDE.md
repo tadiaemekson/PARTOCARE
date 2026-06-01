@@ -1,0 +1,3 @@
+# pages
+
+Placeholder CLAUDE.md

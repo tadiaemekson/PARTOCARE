@@ -1,0 +1,3 @@
+# Services
+
+Placeholder CLAUDE.md
