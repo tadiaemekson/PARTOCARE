@@ -1,0 +1,27 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Dependency directories
+node_modules/
+vendor/
+
+# Build assets
+dist/
+build/
+out/
+.vercel
+
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
