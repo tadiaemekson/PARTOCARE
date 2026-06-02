@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { db } from '../services/db';
+import { useLanguage } from '../contexts/LanguageContext';
 import { 
   MessageSquare, X, Send, Bot, User, Sparkles, 
   HelpCircle, BarChart2, UserCheck, ShieldAlert 
@@ -14,17 +15,27 @@ interface Message {
 
 export const ChatBot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      sender: 'bot',
-      text: "Bonjour ! Je suis PartoAssist, votre assistant clinique de maternité. Comment puis-je vous aider à surveiller vos patientes aujourd'hui ?",
-      timestamp: new Date()
-    }
-  ]);
+  const { language } = useLanguage();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Set welcome message dynamically based on language
+  useEffect(() => {
+    if (messages.length === 0) {
+      setMessages([
+        {
+          id: 'welcome',
+          sender: 'bot',
+          text: language === 'fr' 
+            ? "Bonjour ! Je suis PartoAssist, votre assistant clinique de maternité. Comment puis-je vous aider à surveiller vos patientes aujourd'hui ? Vous pouvez me demander de l'aide en cliquant sur \"Guide d'utilisation\"."
+            : "Hello! I am PartoAssist, your clinical maternity assistant. How can I help you monitor your patients today? You can ask for help by clicking \"User Guide\".",
+          timestamp: new Date()
+        }
+      ]);
+    }
+  }, [language, messages.length]);
 
   // Auto-scroll to latest message
   useEffect(() => {
@@ -64,9 +75,142 @@ export const ChatBot: React.FC = () => {
   const parseClinicalQuery = async (query: string): Promise<string> => {
     const cleanQuery = query.toLowerCase().trim();
 
+    // 0. Onboarding guide triggers
+    if (cleanQuery === '1' || cleanQuery.includes('admettre') || cleanQuery.includes('admission') || cleanQuery.includes('admit')) {
+      return language === 'fr'
+        ? "➕ **1. Admettre une patiente :**\n\n" +
+          "• Allez sur l'onglet **Patientes & Suivi** dans le menu latéral gauche.\n" +
+          "• Cliquez sur le bouton **Enregistrer une Patiente** (ou **Admettre**).\n" +
+          "• Saisissez ses données d'identification (Nom, Âge, Code de patiente unique, Groupe sanguin).\n" +
+          "• Créez un dossier de grossesse en indiquant la gestité, la parité et les semaines d'aménorrhée (SA).\n" +
+          "• Cliquez sur **Initier le Travail (Phase active)** pour ouvrir son partogramme numérique."
+        : "➕ **1. Admitting a Patient:**\n\n" +
+          "• Navigate to the **Patients & Monitoring** tab in the left sidebar menu.\n" +
+          "• Click the **Register Patient** (or **Admit**) button.\n" +
+          "• Enter patient details (Name, Age, Unique patient code, Blood group).\n" +
+          "• Add pregnancy factors: gravidity, parity, and gestational weeks (GW).\n" +
+          "• Click **Initiate Labour (Active Phase)** to open her digital partograph.";
+    }
+
+    if (cleanQuery === '2' || cleanQuery.includes('ouvrir') || cleanQuery.includes('partogramme') || cleanQuery.includes('parto') || cleanQuery.includes('partograph')) {
+      return language === 'fr'
+        ? "📈 **2. Ouvrir le Partogramme :**\n\n" +
+          "• Une fois le travail initié, la patiente apparaît dans la liste des **Travails Actifs** sur le tableau de bord.\n" +
+          "• Cliquez sur le bouton **Partogramme** à droite de son nom pour ouvrir sa fiche clinique.\n" +
+          "• Vous verrez un graphique dynamique interactif affichant la dilatation cervicale (ligne d'alerte rouge et ligne d'action) et la fréquence cardiaque fœtale."
+        : "📈 **2. Opening the Partograph:**\n\n" +
+          "• Once labour is initiated, the patient will appear in the **Active Labours List** on the main dashboard.\n" +
+          "• Click the **Partograph** button next to her name to open her clinical record.\n" +
+          "• You will see an interactive chart showing cervical dilation (with the alert and action lines) and fetal heart rate.";
+    }
+
+    if (cleanQuery === '3' || cleanQuery.includes('observation') || cleanQuery.includes('constante') || cleanQuery.includes('obs') || cleanQuery.includes('vitals')) {
+      return language === 'fr'
+        ? "✍️ **3. Saisir des Observations :**\n\n" +
+          "• Dans le dossier du partogramme de la patiente, cliquez sur le bouton **Saisir Observation** (en haut à droite).\n" +
+          "• Un formulaire s'ouvre pour saisir les constantes périodiques :\n" +
+          "  - Dilatation cervicale (cm) et hauteur de présentation (station).\n" +
+          "  - Fréquence cardiaque fœtale (FCF - bpm).\n" +
+          "  - Contractions (nombre en 10 minutes et durée en secondes).\n" +
+          "  - Constantes maternelles (Tension Systolique/Diastolique, Température, Pouls).\n" +
+          "  - État des membranes (Intactes/Rompues) et aspect du liquide amniotique (Clair, Méconial, Sanglant).\n" +
+          "• Cliquez sur **Sauvegarder** pour mettre à jour le graphique instantanément."
+        : "✍️ **3. Entering Observations:**\n\n" +
+          "• In the patient's partograph file, click the **Add Observation** button (top right).\n" +
+          "• A panel will open to let you record clinical parameters:\n" +
+          "  - Cervical dilation (cm) & fetal station (descent).\n" +
+          "  - Fetal Heart Rate (FHR - bpm).\n" +
+          "  - Contractions (number per 10 mins & duration in seconds).\n" +
+          "  - Maternal vitals (Systolic/Diastolic BP, Temperature, Pulse).\n" +
+          "  - Membrane status (Intact/Ruptured) & amniotic fluid aspect (Clear, Meconium, Bloody).\n" +
+          "• Click **Save** to update the chart immediately.";
+    }
+
+    if (cleanQuery === '4' || cleanQuery.includes('moteur') || cleanQuery.includes('critère') || cleanQuery.includes('stagnation') || cleanQuery.includes('diagnostic') || cleanQuery.includes('warning')) {
+      return language === 'fr'
+        ? "🚨 **4. Moteur d'Alertes Cliniques :**\n\n" +
+          "• PartoCare intègre un algorithme intelligent conforme aux normes de l'OMS.\n" +
+          "• Dès qu'une constante sort des limites normales (ex: FCF < 110 ou > 160, dilatation stagnante sur 2h, fièvre > 38°C, TA élevée), le système génère automatiquement une alerte.\n" +
+          "• Les alertes s'affichent en temps réel dans la cloche de notifications en haut et dans le panneau **Moteur de Diagnostic** à droite du partogramme.\n" +
+          "• **Critique (Rouge)** ou **Modéré (Orange)** vous indiquent qu'il faut agir immédiatement ou préparer un transfert."
+        : "🚨 **4. Clinical Alerts System:**\n\n" +
+          "• PartoCare features an automated algorithm matching WHO standards.\n" +
+          "• When parameters deviate from normal range (e.g. FHR < 110 or > 160 bpm, dilation stagnation over 2 hours, temperature > 38°C, hypertension), the system automatically triggers an alert.\n" +
+          "• Alerts appear in real-time in the top notification bell and the **Diagnostic Engine** panel on the right of the partograph.\n" +
+          "• **Critical (Red)** or **Moderate (Orange)** alerts indicate immediate action or preparing for referral.";
+    }
+
+    if (cleanQuery === '5' || cleanQuery.includes('transferer') || cleanQuery.includes('reference') || cleanQuery.includes('transfer') || cleanQuery.includes('referral') || cleanQuery.includes('evacuation')) {
+      return language === 'fr'
+        ? "    " +
+          "🚑 **5. Références d'Urgence (Transfert) :**\n\n" +
+          "• Si l'état de la patiente nécessite un plateau technique plus élevé, cliquez sur **Transférer** dans sa fiche partogramme.\n" +
+          "• Sélectionnez l'hôpital de destination et indiquez le motif clinique du transfert.\n" +
+          "• Le dossier de transfert est instantanément visible par l'hôpital receveur et le district sanitaire.\n" +
+          "• Les régulateurs de district affecteront une ambulance disponible. Les coordonnées du chauffeur et l'immatriculation s'afficheront sur votre écran pour un suivi en temps réel."
+        : "    " +
+          "🚑 **5. Emergency Referrals (Transfer):**\n\n" +
+          "• If the patient requires a higher-level facility, click the **Transfer/Refer** button on her partograph file.\n" +
+          "• Choose the destination hospital and enter the clinical reason.\n" +
+          "• The transfer record is shared instantly with the receiving facility and district coordinators.\n" +
+          "• The district dispatcher will assign an available ambulance. The driver's name, phone, and vehicle registration plate will display on your screen in real time.";
+    }
+
+    if (cleanQuery === '6' || cleanQuery.includes('cloture') || cleanQuery.includes('clôturer') || cleanQuery.includes('naissance') || cleanQuery.includes('delivery') || cleanQuery.includes('discharge') || cleanQuery.includes('issue')) {
+      return language === 'fr'
+        ? "👶 **6. Clôturer une Naissance :**\n\n" +
+          "• Lorsque la patiente accouche avec succès dans votre structure, cliquez sur **Clôturer Naissance**.\n" +
+          "• Renseignez le mode d'accouchement (Voie basse spontanée, Césarienne d'urgence, Instrumental).\n" +
+          "• Renseignez l'issue clinique pour la mère et l'enfant (bien portants, complications, etc.).\n" +
+          "• Le dossier est fermé et archivé de manière sécurisée."
+        : "👶 **6. Closing a Labour Case:**\n\n" +
+          "• When the patient delivers successfully in your facility, click the **Discharge/Close** button.\n" +
+          "• Enter the delivery mode (Spontaneous Vaginal, Emergency C-Section, Instrumental Forceps/Vacuum).\n" +
+          "• Select the clinical outcome for both mother and child (healthy, complications, etc.).\n" +
+          "• The file is closed and securely archived.";
+    }
+
+    if (cleanQuery === '7' || cleanQuery.includes('hors-ligne') || cleanQuery.includes('hors ligne') || cleanQuery.includes('offline') || cleanQuery.includes('sync')) {
+      return language === 'fr'
+        ? "📶 **7. Mode Hors-ligne Autonome :**\n\n" +
+          "• PartoCare est conçu pour fonctionner sans connexion internet.\n" +
+          "• Si le réseau coupe (voyant Wifi passe au jaune **Hors-ligne**), toutes vos saisies sont sauvegardées localement dans le navigateur (IndexedDB).\n" +
+          "• Une fois la connexion rétablie, cliquez sur le bouton orange **Sync** dans l'en-tête pour pousser toutes les données accumulées dans l'outbox vers le serveur central."
+        : "📶 **7. Autonomous Offline Mode:**\n\n" +
+          "• PartoCare is designed to function seamlessly without internet connectivity.\n" +
+          "• If you lose connection (Wifi indicator changes to yellow **Offline**), all entries are safely saved locally in the browser's database (IndexedDB).\n" +
+          "• When back online, click the orange **Sync** button in the header bar to push all queued changes from the outbox to the central database.";
+    }
+
+    if (cleanQuery.match(/(guide|aide|help|manuel|onboarding)/)) {
+      return language === 'fr'
+        ? "📖 **Guide d'utilisation de PartoCare (Onboarding) :**\n" +
+          "Bienvenue sur PartoCare ! Voici les étapes clés pour utiliser l'application clinique :\n\n" +
+          "• **Tapez 1** (ou \"admission\") : Admettre une patiente\n" +
+          "• **Tapez 2** (ou \"parto\") : Ouvrir et lire le partogramme\n" +
+          "• **Tapez 3** (ou \"observation\") : Enregistrer des observations cliniques\n" +
+          "• **Tapez 4** (ou \"alerte\") : Comprendre le moteur d'alertes cliniques\n" +
+          "• **Tapez 5** (ou \"transfert\") : Lancer et suivre un transfert d'urgence\n" +
+          "• **Tapez 6** (ou \"clôture\") : Enregistrer l'issue de l'accouchement\n" +
+          "• **Tapez 7** (ou \"offline\") : Fonctionnement hors-ligne et synchronisation\n\n" +
+          "Tapez le numéro ou le mot-clé (ex: \"1\" ou \"transfert\") pour en savoir plus sur l'étape correspondante !"
+        : "📖 **PartoCare User Guide (Onboarding):**\n" +
+          "Welcome to PartoCare! Here are the core steps to use the clinical application:\n\n" +
+          "• **Type 1** (or \"admission\"): Admit a new patient\n" +
+          "• **Type 2** (or \"parto\"): Open and view the partograph chart\n" +
+          "• **Type 3** (or \"observation\"): Log clinical observations & vitals\n" +
+          "• **Type 4** (or \"alert\"): Understand the clinical alerts system\n" +
+          "• **Type 5** (or \"transfer\"): Initiate and track emergency referrals\n" +
+          "• **Type 6** (or \"close\"): Record the delivery outcome\n" +
+          "• **Type 7** (or \"offline\"): Offline operations & data syncing\n\n" +
+          "Type the number or keyword (e.g., \"1\" or \"transfer\") to read the specific instructions!";
+    }
+
     // 1. Greet check
     if (cleanQuery.match(/^(bonjour|salut|hello|hi|hey|bonsoir)/)) {
-      return "Bonjour ! Comment se passe votre garde ? Vous pouvez me demander d'analyser une patiente active (ex: \"Florence Ebanda\" ou \"Marie Ngo\"), de vous donner les statistiques actuelles de la maternité, ou de lister les seuils cliniques d'alerte du partogramme.";
+      return language === 'fr'
+        ? "Bonjour ! Comment se passe votre garde ? Vous pouvez me demander de l'aide (tapez \"guide\"), d'analyser une patiente active (ex: \"Florence Ebanda\" ou \"Marie Ngo\"), de vous donner les statistiques actuelles de la maternité, ou de lister les seuils cliniques d'alerte."
+        : "Hello! How is your shift going? You can ask me for help (type \"guide\"), to analyze an active patient (e.g. \"Florence Ebanda\" or \"Marie Ngo\"), to get ward statistics, or to list clinical alerts thresholds.";
     }
 
     // 2. Stats check
@@ -80,29 +224,49 @@ export const ChatBot: React.FC = () => {
         const redAlerts = alerts.filter(a => a.alert_level === 'RED').length;
         const orangeAlerts = alerts.filter(a => a.alert_level === 'ORANGE').length;
 
-        return `📊 **Rapport de Situation Actuel :**\n\n` +
-               `• **Travails actifs :** ${activeLabours.length} patientes en cours de surveillance.\n` +
-               `• **Alertes non résolues :** ${alerts.length} au total (${redAlerts} critiques 🔴, ${orangeAlerts} modérées 🟠).\n` +
-               `• **Transferts / Références :** ${pendingRefs.length} en attente, ${transitRefs.length} en cours de transport.\n\n` +
-               `*Détail des cas critiques :* demandez-moi d'analyser une patiente en particulier pour afficher ses constantes cliniques.`;
+        return language === 'fr'
+          ? `📊 **Rapport de Situation Actuel :**\n\n` +
+            `• **Travails actifs :** ${activeLabours.length} patientes en cours de surveillance.\n` +
+            `• **Alertes non résolues :** ${alerts.length} au total (${redAlerts} critiques 🔴, ${orangeAlerts} modérées 🟠).\n` +
+            `• **Transferts / Références :** ${pendingRefs.length} en attente, ${transitRefs.length} en cours de transport.\n\n` +
+            `*Détail des cas critiques :* demandez-moi d'analyser une patiente en particulier pour afficher ses constantes cliniques.`
+          : `📊 **Current Status Report:**\n\n` +
+            `• **Active labours:** ${activeLabours.length} patients currently being monitored.\n` +
+            `• **Unresolved alerts:** ${alerts.length} total (${redAlerts} critical 🔴, ${orangeAlerts} moderate 🟠).\n` +
+            `• **Transfers / Referrals:** ${pendingRefs.length} pending, ${transitRefs.length} in transit.\n\n` +
+            `*Critical case details:* ask me to analyze a specific patient to view her clinical parameters.`;
       } catch (err) {
-        return "Désolé, je n'ai pas pu accéder aux dossiers locaux pour calculer les statistiques.";
+        return language === 'fr' 
+          ? "Désolé, je n'ai pas pu accéder aux dossiers locaux pour calculer les statistiques."
+          : "Sorry, I could not access local records to calculate statistics.";
       }
     }
 
     // 3. Clinical Guidelines / Alerts check
     if (cleanQuery.match(/(seuil|régle|alerte|critère|limite|norme|fcf|stagnation|temp|tension|bp)/)) {
-      return `🔴 **Seuils d'Alerte Clinique (Recommandations OMS/PartoCare) :**\n\n` +
-             `1. **Fréquence Cardiaque Fœtale (FCF) :**\n` +
-             `   • Normal : 110 à 160 bpm.\n` +
-             `   • Critique : < 110 bpm (bradycardie) ou > 160 bpm (tachycardie) 🔴.\n` +
-             `2. **Dilation Cervicale (Stagnation) :**\n` +
-             `   • Phase active : Progression minimale attendue de 1 cm / heure.\n` +
-             `   • Alerte : Dilatation inchangée sur 2 examens espacés de 2 heures 🔴.\n` +
-             `3. **Température Maternelle :**\n` +
-             `   • Alerte : > 38.0 °C (suspecter chorioamnionite/infection) 🟠.\n` +
-             `4. **Tension Artérielle Maternelle :**\n` +
-             `   • Hypertension : TA >= 140/90 mmHg (risque de pré-éclampsie) 🟠.`;
+      return language === 'fr'
+        ? `🔴 **Seuils d'Alerte Clinique (Recommandations OMS/PartoCare) :**\n\n` +
+          `1. **Fréquence Cardiaque Fœtale (FCF) :**\n` +
+          `   • Normal : 110 à 160 bpm.\n` +
+          `   • Critique : < 110 bpm (bradycardie) ou > 160 bpm (tachycardie) 🔴.\n` +
+          `2. **Dilation Cervicale (Stagnation) :**\n` +
+          `   • Phase active : Progression minimale attendue de 1 cm / heure.\n` +
+          `   • Alerte : Dilatation inchangée sur 2 examens espacés de 2 heures 🔴.\n` +
+          `3. **Température Maternelle :**\n` +
+          `   • Alerte : > 38.0 °C (suspecter chorioamnionite/infection) 🟠.\n` +
+          `4. **Tension Artérielle Maternelle :**\n` +
+          `   • Hypertension : TA >= 140/90 mmHg (risque de pré-éclampsie) 🟠.`
+        : `🔴 **Clinical Alert Thresholds (WHO / PartoCare Guidelines):**\n\n` +
+          `1. **Fetal Heart Rate (FHR):**\n` +
+          `   • Normal: 110 to 160 bpm.\n` +
+          `   • Critical: < 110 bpm (bradycardia) or > 160 bpm (tachycardia) 🔴.\n` +
+          `2. **Cervical Dilation (Stagnation):**\n` +
+          `   • Active phase: Expected minimum progression of 1 cm / hour.\n` +
+          `   • Alert: Dilatation unchanged on 2 exams spaced 2 hours apart 🔴.\n` +
+          `3. **Maternal Temperature:**\n` +
+          `   • Alert: > 38.0 °C (suspect chorioamnionite/infection) 🟠.\n` +
+          `4. **Maternal Blood Pressure:**\n` +
+          `   • Hypertension: BP >= 140/90 mmHg (risk of pre-eclampsia) 🟠.`;
     }
 
     // 4. Patient Specific Check (Florence Ebanda)
@@ -212,11 +376,19 @@ export const ChatBot: React.FC = () => {
     }
 
     // 6. Default fallback
-    return "Je ne suis pas sûr de comprendre votre question. Je peux :\n" +
-           "1. Calculer les statistiques en cours de la garde (tapez \"stats\").\n" +
-           "2. Analyser une patiente active (tapez \"Marie Ngo\" ou \"Florence Ebanda\").\n" +
-           "3. Vous rappeler les critères d'alertes cliniques (tapez \"seuils\").\n\n" +
-           "Utilisez également les boutons de raccourcis ci-dessous !";
+    return language === 'fr'
+      ? "Je ne suis pas sûr de comprendre votre question. Je peux :\n" +
+        "1. Vous guider pour utiliser l'application (tapez \"guide\").\n" +
+        "2. Calculer les statistiques en cours de la garde (tapez \"stats\").\n" +
+        "3. Analyser une patiente active (tapez \"Marie Ngo\" ou \"Florence Ebanda\").\n" +
+        "4. Vous rappeler les critères d'alertes cliniques (tapez \"seuils\").\n\n" +
+        "Utilisez également les boutons de raccourcis ci-dessous !"
+      : "I'm not sure I understand your question. I can:\n" +
+        "1. Walk you through how to use the app (type \"guide\").\n" +
+        "2. Calculate current shift statistics (type \"stats\").\n" +
+        "3. Analyze an active patient (type \"Marie Ngo\" or \"Florence Ebanda\").\n" +
+        "4. Remind you of clinical alert thresholds (type \"thresholds\").\n\n" +
+        "Use the shortcut buttons below as well!";
   };
 
   return (
@@ -237,7 +409,7 @@ export const ChatBot: React.FC = () => {
                 </h3>
                 <span className="text-[10px] text-status-green flex items-center">
                   <span className="h-1.5 w-1.5 rounded-full bg-status-green mr-1 inline-block animate-ping"></span>
-                  Assistant Clinique Actif
+                  {language === 'fr' ? 'Assistant Clinique Actif' : 'Clinical Assistant Active'}
                 </span>
               </div>
             </div>
@@ -296,10 +468,11 @@ export const ChatBot: React.FC = () => {
           {/* Quick Suggestions list */}
           <div className="px-4 py-2 border-t border-brand-border/20 bg-slate-900/30 flex flex-wrap gap-1.5">
             {[
-              { label: 'Stats Garde', text: 'Rapport de garde', icon: BarChart2 },
-              { label: 'Analyse Florence', text: 'Florence Ebanda', icon: UserCheck },
-              { label: 'Analyse Marie', text: 'Marie Ngo', icon: ShieldAlert },
-              { label: 'Seuils OMS', text: 'Seuils alerte clinique', icon: HelpCircle }
+              { label: language === 'fr' ? '📖 Guide App' : '📖 App Guide', text: 'guide', icon: HelpCircle },
+              { label: language === 'fr' ? 'Stats Garde' : 'Ward Stats', text: 'Rapport de garde', icon: BarChart2 },
+              { label: language === 'fr' ? 'Analyse Florence' : 'Analyze Florence', text: 'Florence Ebanda', icon: UserCheck },
+              { label: language === 'fr' ? 'Analyse Marie' : 'Analyze Marie', text: 'Marie Ngo', icon: ShieldAlert },
+              { label: language === 'fr' ? 'Seuils OMS' : 'WHO Thresholds', text: 'Seuils alerte clinique', icon: HelpCircle }
             ].map(suggest => {
               const Icon = suggest.icon;
               return (
@@ -324,7 +497,7 @@ export const ChatBot: React.FC = () => {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Poser une question clinique..."
+              placeholder={language === 'fr' ? "Poser une question clinique..." : "Ask a clinical question..."}
               className="flex-1 bg-slate-950 border border-brand-border/30 rounded-xl px-3 py-2 text-xs text-white placeholder-brand-muted focus:outline-none focus:border-status-orange/60"
             />
             <button
@@ -342,7 +515,7 @@ export const ChatBot: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="h-14 w-14 rounded-full bg-gradient-to-tr from-status-red to-status-orange text-white shadow-2xl flex items-center justify-center hover:brightness-110 transition-transform duration-200 active:scale-95 group relative"
-        title="Ouvrir PartoAssist"
+        title={language === 'fr' ? "Ouvrir PartoAssist" : "Open PartoAssist"}
       >
         {isOpen ? (
           <X className="h-6 w-6" />
