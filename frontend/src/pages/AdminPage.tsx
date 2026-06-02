@@ -4,13 +4,24 @@ import { db, seedDatabase } from '../services/db';
 import { syncManager } from '../services/sync';
 import { 
   Settings, Database, Server, Smartphone, 
-  MapPin, CheckCircle, RefreshCw, Trash2
+  MapPin, CheckCircle, RefreshCw, Trash2, PlusCircle, Building
 } from 'lucide-react';
+import { apiService } from '../services/api';
 
 export const AdminPage: React.FC = () => {
   const [waKey, setWaKey] = useState('wa_bus_live_c18a287a9bc0...');
   const [syncUrl, setSyncUrl] = useState('https://api.partocare.cm/v1');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // New facility form state
+  const [facName, setFacName] = useState('');
+  const [facType, setFacType] = useState('CMA');
+  const [facRegion, setFacRegion] = useState('Centre');
+  const [facDistrict, setFacDistrict] = useState('Bafia');
+  const [facAddress, setFacAddress] = useState('');
+  const [facPhone, setFacPhone] = useState('');
+  const [facLat, setFacLat] = useState(4.67);
+  const [facLng, setFacLng] = useState(11.23);
 
   // Reactive DB queries
   const facilities = useLiveQuery(() => {
@@ -69,6 +80,36 @@ export const AdminPage: React.FC = () => {
     setTimeout(() => setSuccessMsg(null), 3000);
   };
 
+  const handleCreateFacility = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!facName.trim()) {
+      alert("Le nom de la structure est requis.");
+      return;
+    }
+
+    try {
+      await apiService.createFacility({
+        name: facName,
+        type: facType,
+        region: facRegion,
+        district: facDistrict,
+        address: facAddress,
+        phone: facPhone,
+        latitude: Number(facLat),
+        longitude: Number(facLng)
+      });
+
+      setSuccessMsg(`Structure "${facName}" ajoutée avec succès et mise en attente de synchronisation.`);
+      setFacName('');
+      setFacAddress('');
+      setFacPhone('');
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err) {
+      console.error("Failed to register facility:", err);
+      alert("Erreur lors de l'enregistrement de la structure.");
+    }
+  };
+
   return (
     <div className="space-y-6">
       
@@ -123,6 +164,117 @@ export const AdminPage: React.FC = () => {
 
               <button type="submit" className="px-4 py-2 bg-slate-900 border border-brand-border/40 rounded-xl text-xs font-bold text-white hover:bg-slate-800 transition">
                 Sauvegarder les clés
+              </button>
+            </form>
+          </div>
+
+          {/* Register New Facility Form */}
+          <div className="glass-panel border border-brand-border/40 rounded-2xl p-6">
+            <h3 className="text-sm font-bold text-white mb-4 flex items-center">
+              <Building className="h-5 w-5 text-status-orange mr-2" />
+              Enregistrer une Nouvelle Structure Sanitaire
+            </h3>
+            
+            <form onSubmit={handleCreateFacility} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Nom de la structure *</label>
+                  <input 
+                    type="text" 
+                    value={facName}
+                    onChange={e => setFacName(e.target.value)}
+                    placeholder="ex: CSI de Ndiki Nord"
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Type de structure</label>
+                  <select 
+                    value={facType}
+                    onChange={e => setFacType(e.target.value)}
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white"
+                  >
+                    <option value="CMA">CMA (Centre Médical d'Arrondissement)</option>
+                    <option value="District Hospital">Hôpital de District (District Hospital)</option>
+                    <option value="Regional Hospital">Hôpital Régional (Regional Hospital)</option>
+                    <option value="Clinic">Clinique Privée / Autre</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Région</label>
+                  <input 
+                    type="text" 
+                    value={facRegion}
+                    onChange={e => setFacRegion(e.target.value)}
+                    placeholder="ex: Centre"
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">District Sanitaire</label>
+                  <input 
+                    type="text" 
+                    value={facDistrict}
+                    onChange={e => setFacDistrict(e.target.value)}
+                    placeholder="ex: Bafia"
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Téléphone contact</label>
+                  <input 
+                    type="text" 
+                    value={facPhone}
+                    onChange={e => setFacPhone(e.target.value)}
+                    placeholder="ex: +237699887766"
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Adresse / Localisation</label>
+                  <input 
+                    type="text" 
+                    value={facAddress}
+                    onChange={e => setFacAddress(e.target.value)}
+                    placeholder="ex: Ndiki Ville, face Eglise"
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Latitude (GPS)</label>
+                  <input 
+                    type="number" 
+                    step="0.0001"
+                    value={facLat}
+                    onChange={e => setFacLat(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-mono" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Longitude (GPS)</label>
+                  <input 
+                    type="number" 
+                    step="0.0001"
+                    value={facLng}
+                    onChange={e => setFacLng(Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-mono" 
+                  />
+                </div>
+              </div>
+
+              <button type="submit" className="px-4 py-2 bg-gradient-to-tr from-status-red to-status-orange hover:brightness-110 text-xs font-bold text-white rounded-xl shadow-lg transition flex items-center">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Enregistrer la structure
               </button>
             </form>
           </div>

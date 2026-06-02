@@ -567,5 +567,30 @@ export const apiService = {
   async getFacilities(): Promise<Facility[]> {
     await delay(200);
     return await db.facilities.toArray();
+  },
+
+  async createFacility(facilityData: Omit<Facility, 'id'>): Promise<Facility> {
+    await delay(300);
+    const id = 'fac-' + Math.random().toString(36).substr(2, 9);
+    
+    const newFacility: Facility = {
+      ...facilityData,
+      id
+    };
+
+    await db.facilities.add(newFacility);
+
+    await db.sync_queue.add({
+      action: 'CREATE_FACILITY',
+      payload: newFacility,
+      status: 'PENDING',
+      created_at: new Date().toISOString()
+    });
+
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
+
+    return newFacility;
   }
 };

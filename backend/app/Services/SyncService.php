@@ -4,6 +4,7 @@ namespace App\Services;
  
 use App\Models\Patient;
 use App\Models\Pregnancy;
+use App\Models\Facility;
 use App\Models\Labour;
 use App\Models\Partogram;
 use App\Models\PartogramEntry;
@@ -42,6 +43,10 @@ class SyncService
             try {
                 DB::transaction(function () use ($action, $payload) {
                     switch ($action) {
+                        case 'CREATE_FACILITY':
+                            Facility::firstOrCreate(['id' => $payload['id']], $payload);
+                            break;
+
                         case 'CREATE_PATIENT':
                             Patient::firstOrCreate(['id' => $payload['id']], $payload);
                             break;

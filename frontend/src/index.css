@@ -118,3 +118,71 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* --- Print Stylesheet for PDF/Paper Reports --- */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Hide navigation panel, top header, actions, and popups */
+  aside, 
+  header, 
+  button,
+  form,
+  .print-hidden {
+    display: none !important;
+  }
+  
+  /* Make content container full-width and remove padding */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* High contrast tables and grids */
+  .glass-panel,
+  .glass-card,
+  .bg-slate-900\/40 {
+    background: white !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    color: black !important;
+  }
+  
+  /* Re-style text colors for maximum contrast */
+  h1, h2, h3, h4, p, span, td, th, div {
+    color: black !important;
+  }
+  
+  /* Specific table print adjustments */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+  
+  th, td {
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding: 8px !important;
+    color: black !important;
+  }
+  
+  th {
+    background-color: #f1f5f9 !important;
+  }
+  
+  /* Force chart backgrounds to be light */
+  .recharts-wrapper {
+    background: white !important;
+  }
+  
+  /* Prevent page breaks inside charts/tables */
+  .glass-panel {
+    page-break-inside: avoid !important;
+  }
+}

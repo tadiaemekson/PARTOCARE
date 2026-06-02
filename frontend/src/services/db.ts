@@ -138,7 +138,7 @@ export interface Notification {
 
 export interface SyncQueueItem {
   id?: number;
-  action: 'CREATE_PATIENT' | 'CREATE_PREGNANCY' | 'START_LABOUR' | 'ADD_ENTRY' | 'CREATE_REFERRAL' | 'ASSIGN_AMBULANCE' | 'RESOLVE_ALERT' | 'UPDATE_REFERRAL_STATUS';
+  action: 'CREATE_PATIENT' | 'CREATE_PREGNANCY' | 'START_LABOUR' | 'ADD_ENTRY' | 'CREATE_REFERRAL' | 'ASSIGN_AMBULANCE' | 'RESOLVE_ALERT' | 'UPDATE_REFERRAL_STATUS' | 'CREATE_FACILITY';
   payload: any;
   status: 'PENDING' | 'SYNCING' | 'FAILED';
   created_at: string;

@@ -7,6 +7,7 @@ import {
   Activity, Users, Send, BarChart2, Settings, LogOut, 
   Menu, X, Bell, Wifi, WifiOff, RefreshCw, AlertTriangle, UserCheck
 } from 'lucide-react';
+import { ChatBot } from '../components/ChatBot';
 
 export const DashboardLayout: React.FC = () => {
   const { user, logout, login } = useAuth();
@@ -286,6 +287,9 @@ export const DashboardLayout: React.FC = () => {
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-950/20 p-6">
           <Outlet />
         </main>
+        
+        {/* Floating Interactive Chat Assistant */}
+        <ChatBot />
       </div>
     </div>
   );

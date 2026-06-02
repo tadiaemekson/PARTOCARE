@@ -8,7 +8,7 @@ import { PartogramChart } from '../components/PartogramChart';
 import { ObservationForm } from '../components/ObservationForm';
 import { 
   ArrowLeft, Clock, Activity, Send, 
-  CheckCircle, Plus, AlertTriangle, X, Truck
+  CheckCircle, Plus, AlertTriangle, X, Truck, Download
 } from 'lucide-react';
 
 export const PartogramPage: React.FC = () => {
@@ -19,6 +19,7 @@ export const PartogramPage: React.FC = () => {
   const [showObsDrawer, setShowObsDrawer] = useState(false);
   const [showReferralModal, setShowReferralModal] = useState(false);
   const [showOutcomeModal, setShowOutcomeModal] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
 
   // Referral form states
   const [destFacilityId, setDestFacilityId] = useState('');
@@ -151,6 +152,79 @@ export const PartogramPage: React.FC = () => {
     }
   };
 
+  const handleExportJson = () => {
+    if (!data || !patient) return;
+    
+    const exportData = {
+      exported_at: new Date().toISOString(),
+      patient: {
+        id: patient.id,
+        patient_code: patient.patient_code,
+        first_name: patient.first_name,
+        last_name: patient.last_name,
+        date_of_birth: patient.date_of_birth,
+        phone: patient.phone,
+        address: patient.address,
+        blood_group: patient.blood_group,
+        emergency_contact_name: patient.emergency_contact_name,
+        emergency_contact_phone: patient.emergency_contact_phone
+      },
+      pregnancy: pregnancy ? {
+        id: pregnancy.id,
+        gravidity: pregnancy.gravidity,
+        parity: pregnancy.parity,
+        estimated_delivery_date: pregnancy.estimated_delivery_date,
+        gestational_age_weeks: pregnancy.gestational_age_weeks,
+        risk_level: pregnancy.risk_level,
+        status: pregnancy.status
+      } : null,
+      labour: labour ? {
+        id: labour.id,
+        facility_id: labour.facility_id,
+        admitted_by: labour.admitted_by,
+        admission_datetime: labour.admission_datetime,
+        labour_status: labour.labour_status,
+        delivery_type: labour.delivery_type,
+        outcome: labour.outcome
+      } : null,
+      partogram_entries: entries.map(e => ({
+        observation_time: e.observation_time,
+        cervical_dilation: e.cervical_dilation,
+        fetal_heart_rate: e.fetal_heart_rate,
+        contractions_per_10min: e.contractions_per_10min,
+        contraction_duration_secs: e.contraction_duration_secs,
+        maternal_temperature: e.maternal_temperature,
+        maternal_pulse: e.maternal_pulse,
+        systolic_bp: e.systolic_bp,
+        diastolic_bp: e.diastolic_bp,
+        fetal_station: e.fetal_station,
+        membrane_status: e.membrane_status,
+        amniotic_fluid_status: e.amniotic_fluid_status,
+        notes: e.notes
+      })),
+      alerts: alerts.map(a => ({
+        alert_level: a.alert_level,
+        alert_type: a.alert_type,
+        alert_message: a.alert_message,
+        generated_at: a.generated_at,
+        resolved_at: a.resolved_at
+      }))
+    };
+
+    const jsonString = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `partogramme_${patient.first_name.toLowerCase()}_${patient.last_name.toLowerCase()}_${patient.patient_code}.json`;
+    document.body.appendChild(link);
+    link.click();
+    
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   if (!data) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -171,7 +245,7 @@ export const PartogramPage: React.FC = () => {
       {/* 1. Header Navigation Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 pb-4 border-b border-brand-border/20">
         <div className="flex items-center space-x-4">
-          <Link to="/" className="p-2 bg-slate-900 border border-brand-border/20 rounded-xl text-brand-muted hover:text-white transition">
+          <Link to="/" className="p-2 bg-slate-900 border border-brand-border/20 rounded-xl text-brand-muted hover:text-white transition print-hidden">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
@@ -189,12 +263,47 @@ export const PartogramPage: React.FC = () => {
 
         {/* Action Controls */}
         <div className="flex items-center space-x-3">
+          
+          {/* Download / Export Dropdown */}
+          <div className="relative print-hidden">
+            <button
+              onClick={() => setShowExportDropdown(!showExportDropdown)}
+              className="flex items-center px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-bold rounded-xl text-xs transition border border-brand-border/40 shadow-md"
+            >
+              <Download className="mr-1.5 h-4 w-4 text-slate-400" />
+              Télécharger / Imprimer
+            </button>
+            
+            {showExportDropdown && (
+              <div className="absolute right-0 mt-2 w-48 rounded-xl glass-panel shadow-2xl py-1.5 z-50 border border-brand-border/50">
+                <button
+                  onClick={() => {
+                    setShowExportDropdown(false);
+                    window.print();
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-800 text-[11px] font-semibold text-slate-300 hover:text-white transition"
+                >
+                  📄 Imprimer le PDF Clinique
+                </button>
+                <button
+                  onClick={() => {
+                    setShowExportDropdown(false);
+                    handleExportJson();
+                  }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-800 text-[11px] font-semibold text-slate-300 hover:text-white transition"
+                >
+                  💾 Exporter Fichier (.json)
+                </button>
+              </div>
+            )}
+          </div>
+
           {isLabourActive && (
             <>
               {(user?.role.name === 'MIDWIFE' || user?.role.name === 'NURSE') && (
                 <button
                   onClick={() => setShowObsDrawer(true)}
-                  className="flex items-center px-4 py-2.5 bg-gradient-to-r from-status-orange to-[#f43f5e] hover:brightness-110 active:scale-95 text-white font-bold rounded-xl text-xs transition shadow-lg"
+                  className="flex items-center px-4 py-2.5 bg-gradient-to-r from-status-orange to-[#f43f5e] hover:brightness-110 active:scale-95 text-white font-bold rounded-xl text-xs transition shadow-lg print-hidden"
                 >
                   <Plus className="mr-1.5 h-4 w-4" />
                   Saisir Observation
@@ -204,7 +313,7 @@ export const PartogramPage: React.FC = () => {
               {(user?.role.name === 'MIDWIFE' || user?.role.name === 'PHYSICIAN') && (
                 <button
                   onClick={() => setShowReferralModal(true)}
-                  className="flex items-center px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-status-orange hover:text-white font-bold rounded-xl text-xs transition border border-status-orange/30 shadow-md"
+                  className="flex items-center px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-status-orange hover:text-white font-bold rounded-xl text-xs transition border border-status-orange/30 shadow-md print-hidden"
                 >
                   <Send className="mr-1.5 h-4 w-4 text-status-orange" />
                   Transférer
@@ -214,7 +323,7 @@ export const PartogramPage: React.FC = () => {
               {(user?.role.name === 'PHYSICIAN' || user?.role.name === 'MIDWIFE') && (
                 <button
                   onClick={() => setShowOutcomeModal(true)}
-                  className="flex items-center px-4 py-2.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold rounded-xl text-xs transition border border-sky-500/30"
+                  className="flex items-center px-4 py-2.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold rounded-xl text-xs transition border border-sky-500/30 print-hidden"
                 >
                   <CheckCircle className="mr-1.5 h-4 w-4 text-sky-400" />
                   Clôturer Naissance
@@ -224,13 +333,13 @@ export const PartogramPage: React.FC = () => {
           )}
 
           {isTransferred && (
-            <span className="px-3.5 py-2 bg-status-orange/15 text-status-orange border border-status-orange/30 rounded-xl text-xs font-bold flex items-center">
+            <span className="px-3.5 py-2 bg-status-orange/15 text-status-orange border border-status-orange/30 rounded-xl text-xs font-bold flex items-center print-hidden">
               <Truck className="h-4 w-4 mr-2" /> Patiente Transférée
             </span>
           )}
 
           {isCompleted && (
-            <span className="px-3.5 py-2 bg-status-green/15 text-status-green border border-status-green/30 rounded-xl text-xs font-bold flex items-center">
+            <span className="px-3.5 py-2 bg-status-green/15 text-status-green border border-status-green/30 rounded-xl text-xs font-bold flex items-center print-hidden">
               <CheckCircle className="h-4 w-4 mr-2" /> Accouchement Terminé ({labour.delivery_type})
             </span>
           )}
