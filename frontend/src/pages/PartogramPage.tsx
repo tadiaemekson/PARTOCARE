@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { PartogramChart } from '../components/PartogramChart';
 import { ObservationForm } from '../components/ObservationForm';
 import { 
@@ -14,6 +15,7 @@ import {
 export const PartogramPage: React.FC = () => {
   const { labourId } = useParams<{ labourId: string }>();
   const { user } = useAuth();
+  const { language, t } = useLanguage();
 
   // Dialog states
   const [showObsDrawer, setShowObsDrawer] = useState(false);
@@ -250,13 +252,13 @@ export const PartogramPage: React.FC = () => {
           </Link>
           <div>
             <h1 className="text-xl font-extrabold text-white flex items-center">
-              Dossier Partogramme 
-              {isLabourActive && <span className="ml-2.5 h-2.5 w-2.5 bg-status-green rounded-full animate-pulse glow-green" title="Travail actif" />}
-              {isTransferred && <span className="ml-2.5 h-2.5 w-2.5 bg-status-orange rounded-full" title="Transférée" />}
-              {isCompleted && <span className="ml-2.5 h-2.5 w-2.5 bg-sky-400 rounded-full" title="Accouchement terminé" />}
+              {t('partograph_record')}{' '}
+              {isLabourActive && <span className="ml-2.5 h-2.5 w-2.5 bg-status-green rounded-full animate-pulse glow-green" title={t('active_labour')} />}
+              {isTransferred && <span className="ml-2.5 h-2.5 w-2.5 bg-status-orange rounded-full" title={t('transferred')} />}
+              {isCompleted && <span className="ml-2.5 h-2.5 w-2.5 bg-sky-400 rounded-full" title={t('delivery_completed')} />}
             </h1>
             <p className="text-xs text-brand-muted mt-1">
-              Patiente : <span className="text-white font-bold">{patient?.first_name} {patient?.last_name}</span> &bull; Code : <span className="text-white font-mono">{patient?.patient_code}</span>
+              {t('patient_name')} : <span className="text-white font-bold">{patient?.first_name} {patient?.last_name}</span> &bull; Code : <span className="text-white font-mono">{patient?.patient_code}</span>
             </p>
           </div>
         </div>
@@ -271,7 +273,7 @@ export const PartogramPage: React.FC = () => {
               className="flex items-center px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white font-bold rounded-xl text-xs transition border border-brand-border/40 shadow-md"
             >
               <Download className="mr-1.5 h-4 w-4 text-slate-400" />
-              Télécharger / Imprimer
+              {t('telecharger')}
             </button>
             
             {showExportDropdown && (
@@ -283,7 +285,7 @@ export const PartogramPage: React.FC = () => {
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-slate-800 text-[11px] font-semibold text-slate-300 hover:text-white transition"
                 >
-                  📄 Imprimer le PDF Clinique
+                  {t('imprimer_pdf')}
                 </button>
                 <button
                   onClick={() => {
@@ -292,7 +294,7 @@ export const PartogramPage: React.FC = () => {
                   }}
                   className="w-full text-left px-4 py-2 hover:bg-slate-800 text-[11px] font-semibold text-slate-300 hover:text-white transition"
                 >
-                  💾 Exporter Fichier (.json)
+                  {t('exporter_json')}
                 </button>
               </div>
             )}
@@ -306,7 +308,7 @@ export const PartogramPage: React.FC = () => {
                   className="flex items-center px-4 py-2.5 bg-gradient-to-r from-status-orange to-[#f43f5e] hover:brightness-110 active:scale-95 text-white font-bold rounded-xl text-xs transition shadow-lg print-hidden"
                 >
                   <Plus className="mr-1.5 h-4 w-4" />
-                  Saisir Observation
+                  {t('saisir_obs')}
                 </button>
               )}
               
@@ -316,7 +318,7 @@ export const PartogramPage: React.FC = () => {
                   className="flex items-center px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-status-orange hover:text-white font-bold rounded-xl text-xs transition border border-status-orange/30 shadow-md print-hidden"
                 >
                   <Send className="mr-1.5 h-4 w-4 text-status-orange" />
-                  Transférer
+                  {t('transferer')}
                 </button>
               )}
 
@@ -326,7 +328,7 @@ export const PartogramPage: React.FC = () => {
                   className="flex items-center px-4 py-2.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-bold rounded-xl text-xs transition border border-sky-500/30 print-hidden"
                 >
                   <CheckCircle className="mr-1.5 h-4 w-4 text-sky-400" />
-                  Clôturer Naissance
+                  {t('cloturer')}
                 </button>
               )}
             </>
@@ -334,13 +336,13 @@ export const PartogramPage: React.FC = () => {
 
           {isTransferred && (
             <span className="px-3.5 py-2 bg-status-orange/15 text-status-orange border border-status-orange/30 rounded-xl text-xs font-bold flex items-center print-hidden">
-              <Truck className="h-4 w-4 mr-2" /> Patiente Transférée
+              <Truck className="h-4 w-4 mr-2" /> {t('patient_transferred')}
             </span>
           )}
 
           {isCompleted && (
             <span className="px-3.5 py-2 bg-status-green/15 text-status-green border border-status-green/30 rounded-xl text-xs font-bold flex items-center print-hidden">
-              <CheckCircle className="h-4 w-4 mr-2" /> Accouchement Terminé ({labour.delivery_type})
+              <CheckCircle className="h-4 w-4 mr-2" /> {t('delivery_done')} ({labour.delivery_type})
             </span>
           )}
         </div>
@@ -349,28 +351,28 @@ export const PartogramPage: React.FC = () => {
       {/* 2. Patient Clinical Summary Ribbon */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-900/40 border border-brand-border/20 p-4 rounded-2xl">
         <div>
-          <span className="text-[10px] uppercase font-bold text-brand-muted">Gestité / Parité</span>
+          <span className="text-[10px] uppercase font-bold text-brand-muted">{t('gestity_parity')}</span>
           <p className="text-sm font-bold text-white mt-1">G{pregnancy?.gravidity} / P{pregnancy?.parity}</p>
         </div>
         <div>
-          <span className="text-[10px] uppercase font-bold text-brand-muted">Semaines d'Aménorrhée</span>
-          <p className="text-sm font-bold text-white mt-1">{pregnancy?.gestational_age_weeks} SA</p>
+          <span className="text-[10px] uppercase font-bold text-brand-muted">{t('gestational_weeks')}</span>
+          <p className="text-sm font-bold text-white mt-1">{pregnancy?.gestational_age_weeks} {language === 'fr' ? 'SA' : 'GW'}</p>
         </div>
         <div>
-          <span className="text-[10px] uppercase font-bold text-brand-muted">Facteur de Risque</span>
+          <span className="text-[10px] uppercase font-bold text-brand-muted">{t('risk_factor')}</span>
           <span className={`inline-flex items-center px-2 py-0.5 mt-1 rounded text-[10px] font-bold ${
             pregnancy?.risk_level === 'HIGH' ? 'bg-status-red/15 text-status-red' :
             pregnancy?.risk_level === 'MEDIUM' ? 'bg-status-orange/15 text-status-orange' :
             'bg-status-green/15 text-status-green'
           }`}>
-            RISQUE {pregnancy?.risk_level}
+            {t('risk_level_label')} {pregnancy?.risk_level}
           </span>
         </div>
         <div>
-          <span className="text-[10px] uppercase font-bold text-brand-muted">Heure d'Admission</span>
+          <span className="text-[10px] uppercase font-bold text-brand-muted">{t('admission_time')}</span>
           <p className="text-sm font-bold text-white mt-1 flex items-center">
             <Clock className="h-4 w-4 mr-1 text-slate-500" />
-            {new Date(labour.admission_datetime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+            {new Date(labour.admission_datetime).toLocaleTimeString(language === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
       </div>
@@ -384,40 +386,40 @@ export const PartogramPage: React.FC = () => {
 
           {/* Dilation Timeline Log */}
           <div className="glass-panel border border-brand-border/40 rounded-2xl p-6">
-            <h3 className="text-sm font-bold text-white mb-4">Historique des Observations Cliniques</h3>
+            <h3 className="text-sm font-bold text-white mb-4">{t('clinical_observations_history')}</h3>
             <div className="overflow-x-auto">
               {entries.length === 0 ? (
-                <p className="text-xs text-brand-muted py-4 text-center">Aucune saisie clinique.</p>
+                <p className="text-xs text-brand-muted py-4 text-center">{t('no_clinical_observations')}</p>
               ) : (
                 <table className="min-w-full divide-y divide-brand-border/20 text-xs">
                   <thead>
                     <tr>
-                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">Heure</th>
-                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">Dilatation</th>
-                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">FCF (bpm)</th>
-                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">Contractions</th>
-                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">Constantes (T° / Pouls / TA)</th>
-                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">Membranes / Liquide</th>
-                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">Notes</th>
+                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">{t('time_label')}</th>
+                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">{t('dilation')}</th>
+                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">{t('fhr_bpm')}</th>
+                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">{t('contractions')}</th>
+                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">{t('vitals_label')}</th>
+                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">{t('membranes_fluid')}</th>
+                      <th scope="col" className="pb-3 text-left font-semibold text-brand-muted">{t('notes')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-brand-border/10">
                     {entries.slice().reverse().map((ent) => (
                       <tr key={ent.id} className="hover:bg-slate-900/30 transition">
                         <td className="py-3 whitespace-nowrap text-white">
-                          {new Date(ent.observation_time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(ent.observation_time).toLocaleTimeString(language === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                         </td>
                         <td className="py-3 font-bold text-status-red">{ent.cervical_dilation} cm</td>
                         <td className="py-3 font-semibold text-status-green font-mono">{ent.fetal_heart_rate}</td>
                         <td className="py-3 font-semibold text-status-orange">
-                          {ent.contractions_per_10min} contractions / 10m ({ent.contraction_duration_secs}s)
+                          {ent.contractions_per_10min} {t('contractions_unit')} ({ent.contraction_duration_secs}s)
                         </td>
                         <td className="py-3 text-slate-300">
                           {ent.maternal_temperature}°C &bull; {ent.maternal_pulse} bpm &bull; {ent.systolic_bp}/{ent.diastolic_bp}
                         </td>
                         <td className="py-3 font-medium text-slate-400">
-                          {ent.membrane_status === 'INTACT' ? 'Intactes' : 'Rompues'}
-                          {ent.membrane_status === 'RUPTURED' && ` (${ent.amniotic_fluid_status === 'CLEAR' ? 'Clair' : ent.amniotic_fluid_status === 'MECONIUM' ? 'Méconial' : 'Sanglant'})`}
+                          {ent.membrane_status === 'INTACT' ? t('intact') : t('ruptured')}
+                          {ent.membrane_status === 'RUPTURED' && ` (${ent.amniotic_fluid_status === 'CLEAR' ? t('fluid_clear') : ent.amniotic_fluid_status === 'MECONIUM' ? t('fluid_meconium') : t('fluid_bloody')})`}
                         </td>
                         <td className="py-3 text-brand-muted italic max-w-xs truncate" title={ent.notes}>
                           {ent.notes || '-'}
@@ -440,7 +442,7 @@ export const PartogramPage: React.FC = () => {
               <div className="flex items-center justify-between border-b border-brand-border/20 pb-3">
                 <h3 className="text-sm font-bold text-white flex items-center">
                   <Truck className="h-5 w-5 text-status-orange mr-2" />
-                  Suivi du Transfert
+                  {t('referral_tracking')}
                 </h3>
                 <span className="text-[9px] font-bold bg-status-orange/20 text-status-orange border border-status-orange/30 px-2 py-0.5 rounded">
                   {activeReferral.referral_status}
@@ -449,34 +451,34 @@ export const PartogramPage: React.FC = () => {
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <span className="text-brand-muted block text-[10px] uppercase font-bold">Hôpital de destination</span>
+                  <span className="text-brand-muted block text-[10px] uppercase font-bold">{t('dest_hospital')}</span>
                   <span className="text-white font-medium">{activeReferral.dest_name}</span>
                 </div>
                 <div>
-                  <span className="text-brand-muted block text-[10px] uppercase font-bold">Motif du transfert</span>
+                  <span className="text-brand-muted block text-[10px] uppercase font-bold">{t('reason')}</span>
                   <p className="text-slate-300 mt-1 leading-normal italic">&quot;{activeReferral.reason}&quot;</p>
                 </div>
                 
                 {/* Ambulance assignments details */}
                 {activeReferral.assigned_ambulance ? (
                   <div className="p-3 bg-slate-900 border border-brand-border/40 rounded-xl space-y-2">
-                    <span className="text-[9px] font-extrabold text-status-green uppercase block">Ambulance Assignée</span>
+                    <span className="text-[9px] font-extrabold text-status-green uppercase block">{t('assigned_ambulance')}</span>
                     <div className="text-white font-semibold flex justify-between">
-                      <span>Immatriculation :</span>
+                      <span>{t('registration_label')} :</span>
                       <span className="font-mono">{activeReferral.assigned_ambulance.registration_number}</span>
                     </div>
                     <div className="text-white flex justify-between">
-                      <span>Chauffeur :</span>
+                      <span>{t('driver_label')} :</span>
                       <span>{activeReferral.assigned_ambulance.driver_name}</span>
                     </div>
                     <div className="text-white flex justify-between">
-                      <span>Téléphone :</span>
+                      <span>{t('phone_label')} :</span>
                       <span className="font-mono">{activeReferral.assigned_ambulance.driver_phone}</span>
                     </div>
                   </div>
                 ) : (
                   <div className="p-3 bg-slate-900/60 border border-dashed border-brand-border/30 rounded-xl text-center text-brand-muted text-[11px]">
-                    En attente d'affectation d'une ambulance...
+                    {t('waiting_ambulance')}
                   </div>
                 )}
               </div>
@@ -491,7 +493,7 @@ export const PartogramPage: React.FC = () => {
                     }}
                     className="flex-1 py-2 bg-status-green text-black font-bold rounded-lg text-xs hover:brightness-110"
                   >
-                    Accepter
+                    {t('accept')}
                   </button>
                   <button
                     onClick={async () => {
@@ -499,7 +501,7 @@ export const PartogramPage: React.FC = () => {
                     }}
                     className="flex-1 py-2 bg-status-red text-white font-bold rounded-lg text-xs hover:brightness-110"
                   >
-                    Décliner
+                    {t('decline')}
                   </button>
                 </div>
               )}
@@ -508,11 +510,11 @@ export const PartogramPage: React.FC = () => {
 
           {/* Clinical Alerts list */}
           <div className="glass-panel border border-brand-border/40 rounded-2xl p-5">
-            <h3 className="text-sm font-bold text-white mb-4">Moteur de Diagnostic</h3>
+            <h3 className="text-sm font-bold text-white mb-4">{t('diagnostic_engine')}</h3>
             {alerts.length === 0 ? (
               <div className="text-center py-6 text-brand-muted text-xs flex flex-col items-center space-y-2">
                 <CheckCircle className="h-7 w-7 text-status-green" />
-                <p>Moteur d'alertes au repos.<br />Aucune anomalie clinique détectée.</p>
+                <p>{t('alerts_engine_idle')}<br />{t('no_anomalies_detected')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -544,7 +546,7 @@ export const PartogramPage: React.FC = () => {
             <div className="flex justify-between items-center border-b border-brand-border/20 pb-4 mb-4 shrink-0">
               <h3 className="text-base font-bold text-white flex items-center">
                 <Activity className="mr-2 h-5 w-5 text-status-red" />
-                Saisir Données Cliniques
+                {t('enter_clinical_data')}
               </h3>
               <button onClick={() => setShowObsDrawer(false)} className="text-brand-muted hover:text-white p-1">
                 <X className="h-5 w-5" />
@@ -571,19 +573,19 @@ export const PartogramPage: React.FC = () => {
 
             <h3 className="text-base font-bold text-white flex items-center border-b border-brand-border/20 pb-3 mb-4">
               <Send className="mr-2 h-5 w-5 text-status-orange" />
-              Générer une Référence d'Urgence
+              {t('generate_emergency_referral')}
             </h3>
 
             <form onSubmit={handleCreateReferral} className="space-y-4">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Hôpital Receveur (Plateau Technique)</label>
+                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">{t('receiving_hospital')}</label>
                 <select 
                   required
                   value={destFacilityId} 
                   onChange={e => setDestFacilityId(e.target.value)} 
                   className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white text-xs"
                 >
-                  <option value="">Sélectionner un centre de référence...</option>
+                  <option value="">{t('select_reference_center')}</option>
                   {facilities.map(fac => (
                     <option key={fac.id} value={fac.id}>
                       {fac.name} ({fac.type} - {fac.district})
@@ -593,11 +595,11 @@ export const PartogramPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Motif / Justification Clinique</label>
+                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">{t('clinical_reason_justification')}</label>
                 <textarea 
                   rows={4} 
                   required
-                  placeholder="Justifier le transfert (ex: Souffrance fœtale persistante, Dystocie mécanique...)" 
+                  placeholder={t('justify_transfer_placeholder')} 
                   value={referralReason} 
                   onChange={e => setReferralReason(e.target.value)} 
                   className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white text-xs placeholder-slate-700" 
@@ -605,7 +607,7 @@ export const PartogramPage: React.FC = () => {
               </div>
 
               <button type="submit" className="w-full py-3 bg-gradient-to-r from-status-orange to-status-red text-white font-bold rounded-xl text-xs transition uppercase tracking-wider">
-                Déclencher Transfert numérique
+                {t('trigger_digital_transfer')}
               </button>
             </form>
           </div>
@@ -622,39 +624,39 @@ export const PartogramPage: React.FC = () => {
 
             <h3 className="text-base font-bold text-white flex items-center border-b border-brand-border/20 pb-3 mb-4">
               <CheckCircle className="mr-2 h-5 w-5 text-sky-400" />
-              Saisir l'Issue de l'Accouchement
+              {t('enter_delivery_outcome')}
             </h3>
 
             <form onSubmit={handleCloseLabour} className="space-y-4">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Mode d'accouchement</label>
+                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">{t('delivery_mode')}</label>
                 <select 
                   value={deliveryType} 
                   onChange={e => setDeliveryType(e.target.value as any)} 
                   className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white text-xs"
                 >
-                  <option value="VAGINAL">Voie basse (Spontané)</option>
-                  <option value="CESAREAN">Césarienne d'urgence</option>
-                  <option value="FORCEPS">Accouchement instrumental (Forceps/Ventouse)</option>
+                  <option value="VAGINAL">{t('vaginal_spontaneous')}</option>
+                  <option value="CESAREAN">{t('emergency_c_section')}</option>
+                  <option value="FORCEPS">{t('instrumental_delivery')}</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Issue clinique</label>
+                <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">{t('clinical_outcome')}</label>
                 <select 
                   value={deliveryOutcome} 
                   onChange={e => setDeliveryOutcome(e.target.value as any)} 
                   className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white text-xs"
                 >
-                  <option value="HEALTHY_MOU">Mère et Enfant bien portants</option>
-                  <option value="HEALTHY_CHILD">Nouveau-né sain, Mère sous surveillance</option>
-                  <option value="COMPLICATED">Mère avec complications (HPP...)</option>
-                  <option value="STILLBORN">Mort-né / Décès néonatal</option>
+                  <option value="HEALTHY_MOU">{t('healthy_mother_child')}</option>
+                  <option value="HEALTHY_CHILD">{t('healthy_child_mother_monitored')}</option>
+                  <option value="COMPLICATED">{t('mother_complications')}</option>
+                  <option value="STILLBORN">{t('stillborn_neonatal_death')}</option>
                 </select>
               </div>
 
               <button type="submit" className="w-full py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold rounded-xl text-xs transition uppercase tracking-wider">
-                Sauvegarder et clôturer le dossier
+                {t('save_close_file')}
               </button>
             </form>
           </div>

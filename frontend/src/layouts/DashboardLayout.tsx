@@ -8,9 +8,11 @@ import {
   Menu, X, Bell, Wifi, WifiOff, RefreshCw, AlertTriangle, UserCheck
 } from 'lucide-react';
 import { ChatBot } from '../components/ChatBot';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const DashboardLayout: React.FC = () => {
   const { user, logout, login } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -77,11 +79,11 @@ export const DashboardLayout: React.FC = () => {
   };
 
   const menuItems = [
-    { name: 'Tableau de Bord', path: '/', icon: Activity, roles: ['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER', 'SYSTEM_ADMIN', 'DISTRICT_ADMIN'] },
-    { name: 'Patientes & Suivi', path: '/patients', icon: Users, roles: ['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER'] },
-    { name: 'Références & Transferts', path: '/referrals', icon: Send, iconColor: 'text-status-orange', roles: ['MIDWIFE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER', 'DISTRICT_ADMIN'] },
-    { name: 'Rapports & Stats', path: '/stats', icon: BarChart2, roles: ['MATERNITY_MANAGER', 'DISTRICT_ADMIN', 'SYSTEM_ADMIN'] },
-    { name: 'Administration', path: '/admin', icon: Settings, roles: ['SYSTEM_ADMIN'] }
+    { name: t('dashboard'), path: '/', icon: Activity, roles: ['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER', 'SYSTEM_ADMIN', 'DISTRICT_ADMIN'] },
+    { name: t('patients'), path: '/patients', icon: Users, roles: ['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER'] },
+    { name: t('referrals'), path: '/referrals', icon: Send, iconColor: 'text-status-orange', roles: ['MIDWIFE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER', 'DISTRICT_ADMIN'] },
+    { name: t('reports'), path: '/stats', icon: BarChart2, roles: ['MATERNITY_MANAGER', 'DISTRICT_ADMIN', 'SYSTEM_ADMIN'] },
+    { name: t('admin'), path: '/admin', icon: Settings, roles: ['SYSTEM_ADMIN'] }
   ].filter(item => user && item.roles.includes(user.role.name));
 
   const hasCriticalAlerts = activeAlerts.some(a => a.alert_level === 'RED');
@@ -171,13 +173,37 @@ export const DashboardLayout: React.FC = () => {
 
           <div className="hidden md:block">
             <span className="text-sm font-medium text-brand-muted">
-              PartoCare &bull; Maternité Connectée
+              PartoCare &bull; {t('connected_maternity')}
             </span>
           </div>
 
           {/* Actions & Utilities */}
           <div className="flex items-center space-x-4">
             
+            {/* Language Selector (Bilingual Toggle) */}
+            <div className="flex items-center bg-slate-900/50 border border-brand-border/20 p-1 rounded-lg">
+              <button 
+                onClick={() => setLanguage('fr')}
+                className={`px-2 py-1 rounded text-[10px] font-extrabold transition-all duration-150 ${
+                  language === 'fr' 
+                    ? 'bg-gradient-to-tr from-status-red/10 to-status-orange/20 text-status-orange border border-status-orange/20 shadow-inner' 
+                    : 'text-brand-muted hover:text-white'
+                }`}
+              >
+                FR
+              </button>
+              <button 
+                onClick={() => setLanguage('en')}
+                className={`px-2 py-1 rounded text-[10px] font-extrabold transition-all duration-150 ${
+                  language === 'en' 
+                    ? 'bg-gradient-to-tr from-status-red/10 to-status-orange/20 text-status-orange border border-status-orange/20 shadow-inner' 
+                    : 'text-brand-muted hover:text-white'
+                }`}
+              >
+                EN
+              </button>
+            </div>
+
             {/* Quick Demo Role Switcher */}
             <div className="relative">
               <button 

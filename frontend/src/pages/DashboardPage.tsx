@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { db } from '../services/db';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { 
@@ -11,6 +12,7 @@ import {
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { language, t } = useLanguage();
 
   // Reactive IndexedDB data hooks (updates live upon clinical entries!)
   const stats = useLiveQuery(async () => {
@@ -128,28 +130,28 @@ export const DashboardPage: React.FC = () => {
           <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
             <div className="p-3.5 bg-sky-500/10 text-sky-400 rounded-xl"><Activity className="h-6 w-6" /></div>
             <div>
-              <p className="text-sm font-medium text-brand-muted">Travails Actifs</p>
+              <p className="text-sm font-medium text-brand-muted">{t('active_cases')}</p>
               <h4 className="text-2xl font-bold text-white mt-1">{stats.activeLaboursCount}</h4>
             </div>
           </div>
           <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
             <div className="p-3.5 bg-status-red/10 text-status-red rounded-xl"><AlertTriangle className="h-6 w-6" /></div>
             <div>
-              <p className="text-sm font-medium text-brand-muted">Cas en Alerte</p>
+              <p className="text-sm font-medium text-brand-muted">{t('alert_cases')}</p>
               <h4 className="text-2xl font-bold text-white mt-1">{stats.criticalCount}</h4>
             </div>
           </div>
           <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
             <div className="p-3.5 bg-status-green/10 text-status-green rounded-xl"><CheckCircle className="h-6 w-6" /></div>
             <div>
-              <p className="text-sm font-medium text-brand-muted">Accouchements (24h)</p>
+              <p className="text-sm font-medium text-brand-muted">{t('deliveries_24h')}</p>
               <h4 className="text-2xl font-bold text-white mt-1">{stats.completedTodayCount}</h4>
             </div>
           </div>
           <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
             <div className="p-3.5 bg-status-orange/10 text-status-orange rounded-xl"><Send className="h-6 w-6" /></div>
             <div>
-              <p className="text-sm font-medium text-brand-muted">Transferts en attente</p>
+              <p className="text-sm font-medium text-brand-muted">{t('pending_transfers')}</p>
               <h4 className="text-2xl font-bold text-white mt-1">{stats.pendingReferralsCount}</h4>
             </div>
           </div>
@@ -164,28 +166,28 @@ export const DashboardPage: React.FC = () => {
           <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
             <div className="p-3.5 bg-status-red/10 text-status-red rounded-xl"><HeartPulse className="h-6 w-6 animate-pulse text-status-red" /></div>
             <div>
-              <p className="text-sm font-medium text-brand-muted">Urgences Critiques</p>
+              <p className="text-sm font-medium text-brand-muted">{t('critical_emergencies')}</p>
               <h4 className="text-2xl font-bold text-white mt-1">{stats.criticalCount}</h4>
             </div>
           </div>
           <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
             <div className="p-3.5 bg-status-orange/10 text-status-orange rounded-xl"><Send className="h-6 w-6" /></div>
             <div>
-              <p className="text-sm font-medium text-brand-muted">Demandes de Transferts</p>
+              <p className="text-sm font-medium text-brand-muted">{t('transfer_requests')}</p>
               <h4 className="text-2xl font-bold text-white mt-1">{stats.pendingReferralsCount}</h4>
             </div>
           </div>
           <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
             <div className="p-3.5 bg-sky-500/10 text-sky-400 rounded-xl"><Activity className="h-6 w-6" /></div>
             <div>
-              <p className="text-sm font-medium text-brand-muted">Suivi Salle Naissance</p>
+              <p className="text-sm font-medium text-brand-muted">{t('ward_tracking')}</p>
               <h4 className="text-2xl font-bold text-white mt-1">{stats.activeLaboursCount}</h4>
             </div>
           </div>
           <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
             <div className="p-3.5 bg-indigo-500/10 text-indigo-400 rounded-xl"><Users className="h-6 w-6" /></div>
             <div>
-              <p className="text-sm font-medium text-brand-muted">Gynécos d'Astreinte</p>
+              <p className="text-sm font-medium text-brand-muted">{t('on_call_gynecos')}</p>
               <h4 className="text-2xl font-bold text-white mt-1">2</h4>
             </div>
           </div>
@@ -199,21 +201,21 @@ export const DashboardPage: React.FC = () => {
         <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
           <div className="p-3.5 bg-indigo-500/10 text-indigo-400 rounded-xl"><Users className="h-6 w-6" /></div>
           <div>
-            <p className="text-sm font-medium text-brand-muted">Total Patientes Suivies</p>
+            <p className="text-sm font-medium text-brand-muted">{t('total_monitored')}</p>
             <h4 className="text-2xl font-bold text-white mt-1">154</h4>
           </div>
         </div>
         <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
           <div className="p-3.5 bg-status-orange/10 text-status-orange rounded-xl"><Send className="h-6 w-6" /></div>
           <div>
-            <p className="text-sm font-medium text-brand-muted">Taux d'Évacuation</p>
+            <p className="text-sm font-medium text-brand-muted">{t('evacuation_rate')}</p>
             <h4 className="text-2xl font-bold text-white mt-1">7.4 %</h4>
           </div>
         </div>
         <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
           <div className="p-3.5 bg-status-green/10 text-status-green rounded-xl"><CheckCircle className="h-6 w-6" /></div>
           <div>
-            <p className="text-sm font-medium text-brand-muted">Disponibilité Ambulances</p>
+            <p className="text-sm font-medium text-brand-muted">{t('ambulance_availability')}</p>
             <h4 className="text-2xl font-bold text-white mt-1">
               {ambulances?.filter(a => a.status === 'available').length || 0} / {ambulances?.length || 0}
             </h4>
@@ -222,7 +224,7 @@ export const DashboardPage: React.FC = () => {
         <div className="glass-panel rounded-2xl p-5 border border-brand-border/40 flex items-center space-x-4">
           <div className="p-3.5 bg-rose-500/10 text-rose-400 rounded-xl"><HeartPulse className="h-6 w-6" /></div>
           <div>
-            <p className="text-sm font-medium text-brand-muted">Taux Césarienne</p>
+            <p className="text-sm font-medium text-brand-muted">{t('c_section_rate')}</p>
             <h4 className="text-2xl font-bold text-white mt-1">12.1 %</h4>
           </div>
         </div>
@@ -237,12 +239,12 @@ export const DashboardPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
-            {user.role.name === 'MIDWIFE' || user.role.name === 'NURSE' ? 'Salle de Naissance' : 
-             user.role.name === 'PHYSICIAN' || user.role.name === 'GYNECOLOGIST' ? 'Supervision Clinique' :
-             'Tableau de Bord Analytique'}
+            {user.role.name === 'MIDWIFE' || user.role.name === 'NURSE' ? t('delivery_room') : 
+             user.role.name === 'PHYSICIAN' || user.role.name === 'GYNECOLOGIST' ? t('clinical_supervision') :
+             t('analytical_dashboard')}
           </h1>
           <p className="text-sm text-brand-muted mt-1">
-            Maternité : <span className="text-white font-medium">{user.facility.name}</span>
+            {t('maternity_label')} : <span className="text-white font-medium">{user.facility.name}</span>
           </p>
         </div>
 
@@ -253,7 +255,7 @@ export const DashboardPage: React.FC = () => {
             className="flex items-center justify-center px-5 py-3 bg-gradient-to-r from-status-orange to-[#f43f5e] hover:brightness-110 active:scale-95 text-white font-bold rounded-xl text-sm transition shadow-lg self-start md:self-auto"
           >
             <UserPlus className="mr-2 h-4 w-4" />
-            Admettre une Patiente
+            {t('admit_patient')}
           </Link>
         )}
       </div>
@@ -267,9 +269,9 @@ export const DashboardPage: React.FC = () => {
         {/* Active Birth Rooms Table (Left 2 Columns) */}
         <div className="lg:col-span-2 glass-panel rounded-2xl border border-brand-border/40 p-6 flex flex-col h-[500px]">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-base font-bold text-white">Patientes en Travail Actif</h3>
+            <h3 className="text-base font-bold text-white">{t('patients_active_labour')}</h3>
             <span className="text-xs bg-slate-900 px-2.5 py-1.5 rounded-lg border border-brand-border/20 text-brand-muted">
-              {stats.activeLaboursList.length} Patiente(s) en salle
+              {stats.activeLaboursList.length} {t('patients_in_room')}
             </span>
           </div>
 
@@ -277,8 +279,8 @@ export const DashboardPage: React.FC = () => {
             {stats.activeLaboursList.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-brand-muted text-center space-y-3">
                 <Users className="h-10 w-10 text-slate-700" />
-                <p className="text-sm">Aucun travail actif enregistré pour le moment.</p>
-                <Link to="/patients" className="text-xs text-status-orange font-bold hover:underline">Admettre une patiente maintenant &rarr;</Link>
+                <p className="text-sm">{t('no_active_labour')}</p>
+                <Link to="/patients" className="text-xs text-status-orange font-bold hover:underline">{t('admit_patient_now')} &rarr;</Link>
               </div>
             ) : (
               <div className="min-w-full inline-block align-middle">
@@ -286,10 +288,10 @@ export const DashboardPage: React.FC = () => {
                   <table className="min-w-full divide-y divide-brand-border/20">
                     <thead>
                       <tr>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">Patiente</th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">Admission</th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">Dilatation</th>
-                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">Gravité / Statut</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">{t('patient_name')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">{t('admission')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">{t('dilation')}</th>
+                        <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-brand-muted uppercase tracking-wider">{t('alert_level')}</th>
                         <th scope="col" className="relative px-4 py-3"></th>
                       </tr>
                     </thead>
@@ -308,9 +310,9 @@ export const DashboardPage: React.FC = () => {
                             <td className="px-4 py-4 whitespace-nowrap">
                               <div className="text-xs text-white flex items-center">
                                 <Clock className="h-3.5 w-3.5 mr-1 text-slate-500" />
-                                {new Date(labour.admission_datetime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                {new Date(labour.admission_datetime).toLocaleTimeString(language === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' })}
                               </div>
-                              <div className="text-[10px] text-brand-muted mt-0.5">Le {new Date(labour.admission_datetime).toLocaleDateString('fr-FR')}</div>
+                              <div className="text-[10px] text-brand-muted mt-0.5">{t('date_on')} {new Date(labour.admission_datetime).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US')}</div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-white">
                               <div className="flex items-center space-x-2">
@@ -328,9 +330,9 @@ export const DashboardPage: React.FC = () => {
                                 isYellow ? 'bg-status-yellow/10 text-status-yellow border border-status-yellow/30' :
                                 'bg-status-green/10 text-status-green border border-status-green/30'
                               }`}>
-                                {isRed ? 'Urgences / Détresse' : 
-                                 isOrange ? 'Haute Surveillance' :
-                                 isYellow ? 'Progression Lente' : 'Normal / Stable'}
+                                {isRed ? t('emergency_distress') : 
+                                 isOrange ? t('high_surveillance') :
+                                 isYellow ? t('slow_progression') : t('normal_stable')}
                               </span>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -338,7 +340,7 @@ export const DashboardPage: React.FC = () => {
                                 onClick={() => navigate(`/partogram/${labour.labour_id}`)}
                                 className="inline-flex items-center text-xs font-bold text-status-orange hover:text-white transition group"
                               >
-                                Partogramme 
+                                {t('partograph_btn')}{' '}
                                 <ArrowRight className="h-3.5 w-3.5 ml-1 transition group-hover:translate-x-1" />
                               </button>
                             </td>
@@ -355,13 +357,13 @@ export const DashboardPage: React.FC = () => {
 
         {/* Transfer Tracker (Right 1 Column) */}
         <div className="glass-panel rounded-2xl border border-brand-border/40 p-6 flex flex-col h-[500px]">
-          <h3 className="text-base font-bold text-white mb-6">Suivi des Transferts Actifs</h3>
+          <h3 className="text-base font-bold text-white mb-6">{t('active_transfers_tracking')}</h3>
           
           <div className="flex-1 overflow-y-auto space-y-4">
             {stats.referralsList.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-brand-muted text-center space-y-3">
                 <Send className="h-10 w-10 text-slate-700" />
-                <p className="text-sm">Aucun transfert d'urgence en cours.</p>
+                <p className="text-sm">{t('no_active_transfers')}</p>
               </div>
             ) : (
               stats.referralsList.map((ref) => (
@@ -377,7 +379,7 @@ export const DashboardPage: React.FC = () => {
                   </div>
 
                   <div className="text-[11px] text-brand-muted leading-relaxed">
-                    Destination : <span className="text-white font-medium">{ref.dest_name}</span>
+                    {t('destination_label')} : <span className="text-white font-medium">{ref.dest_name}</span>
                   </div>
 
                   <div className="p-2.5 bg-status-red/5 border border-status-red/20 rounded-xl text-[11px] text-status-red/90 leading-normal italic truncate">
@@ -386,14 +388,14 @@ export const DashboardPage: React.FC = () => {
 
                   <div className="flex justify-between items-center pt-1 border-t border-brand-border/10">
                     <span className="text-[10px] text-brand-muted">
-                      Initié par Midwife
+                      {t('initiated_by')} Midwife
                     </span>
                     
                     <button
                       onClick={() => navigate('/referrals')}
                       className="text-[11px] font-bold text-status-orange hover:underline"
                     >
-                      Détails transfert &rarr;
+                      {t('transfer_details')} &rarr;
                     </button>
                   </div>
                 </div>
@@ -406,3 +408,4 @@ export const DashboardPage: React.FC = () => {
     </div>
   );
 };
+

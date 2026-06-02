@@ -1,6 +1,7 @@
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -31,8 +32,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 export const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <HashRouter>
+    <LanguageProvider>
+      <AuthProvider>
+        <HashRouter>
         <Routes>
           {/* Public Authentication page */}
           <Route path="/login" element={<LoginPage />} />
@@ -57,7 +59,8 @@ export const App: React.FC = () => {
           {/* Fallback routing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </HashRouter>
-    </AuthProvider>
+        </HashRouter>
+      </AuthProvider>
+    </LanguageProvider>
   );
 };

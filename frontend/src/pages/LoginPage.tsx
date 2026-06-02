@@ -1,21 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Activity, ShieldAlert, LogIn } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { language, setLanguage, t } = useLanguage();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    document.title = t('login_title');
+  }, [language, t]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      setError("Veuillez saisir votre adresse email.");
+      setError(t('email_required'));
       return;
     }
     setError(null);
@@ -24,7 +30,11 @@ export const LoginPage: React.FC = () => {
       await login(email);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || "Échec de l'authentification.");
+      if (err.message === "Identifiants incorrects ou compte inexistant.") {
+        setError(t('auth_error'));
+      } else {
+        setError(err.message || t('auth_failed'));
+      }
     } finally {
       setLoading(false);
     }
@@ -37,24 +47,52 @@ export const LoginPage: React.FC = () => {
       await login(quickEmail);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || "Échec de l'authentification.");
+      if (err.message === "Identifiants incorrects ou compte inexistant.") {
+        setError(t('auth_error'));
+      } else {
+        setError(err.message || t('auth_failed'));
+      }
       setLoading(false);
     }
   };
 
   const quickRoles = [
-    { label: 'Sage-femme (Ndiki)', email: 'sagefemme@partocare.cm', color: 'border-emerald-500/20 hover:border-emerald-500/50' },
-    { label: 'Infirmier (Ndiki)', email: 'infirmier@partocare.cm', color: 'border-cyan-500/20 hover:border-cyan-500/50' },
-    { label: 'Médecin (Ndiki)', email: 'medecin@partocare.cm', color: 'border-amber-500/20 hover:border-amber-500/50' },
-    { label: 'Gynécologue (Bafia)', email: 'gynecologue@partocare.cm', color: 'border-rose-500/20 hover:border-rose-500/50' },
-    { label: 'Responsable Maternité', email: 'responsable@partocare.cm', color: 'border-indigo-500/20 hover:border-indigo-500/50' },
-    { label: 'District Sanitaire', email: 'district@partocare.cm', color: 'border-orange-500/20 hover:border-orange-500/50' },
-    { label: 'Admin Système', email: 'admin@partocare.cm', color: 'border-slate-500/20 hover:border-slate-500/50' }
+    { label: t('role_midwife'), email: 'sagefemme@partocare.cm', color: 'border-emerald-500/20 hover:border-emerald-500/50' },
+    { label: t('role_nurse'), email: 'infirmier@partocare.cm', color: 'border-cyan-500/20 hover:border-cyan-500/50' },
+    { label: t('role_physician'), email: 'medecin@partocare.cm', color: 'border-amber-500/20 hover:border-amber-500/50' },
+    { label: t('role_gynecologist'), email: 'gynecologue@partocare.cm', color: 'border-rose-500/20 hover:border-rose-500/50' },
+    { label: t('role_manager'), email: 'responsable@partocare.cm', color: 'border-indigo-500/20 hover:border-indigo-500/50' },
+    { label: t('role_district'), email: 'district@partocare.cm', color: 'border-orange-500/20 hover:border-orange-500/50' },
+    { label: t('role_admin'), email: 'admin@partocare.cm', color: 'border-slate-500/20 hover:border-slate-500/50' }
   ];
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-[#0b0f19] px-4 py-12 sm:px-6 lg:px-8 overflow-hidden font-sans">
       
+      {/* Language Toggle in Top Right */}
+      <div className="absolute top-4 right-4 z-20 flex items-center bg-slate-900/50 border border-brand-border/20 p-1 rounded-lg">
+        <button 
+          onClick={() => setLanguage('fr')}
+          className={`px-2.5 py-1 rounded text-[11px] font-extrabold transition-all duration-150 ${
+            language === 'fr' 
+              ? 'bg-gradient-to-tr from-status-red/10 to-status-orange/20 text-status-orange border border-status-orange/20 shadow-inner' 
+              : 'text-brand-muted hover:text-white'
+          }`}
+        >
+          FR
+        </button>
+        <button 
+          onClick={() => setLanguage('en')}
+          className={`px-2.5 py-1 rounded text-[11px] font-extrabold transition-all duration-150 ${
+            language === 'en' 
+              ? 'bg-gradient-to-tr from-status-red/10 to-status-orange/20 text-status-orange border border-status-orange/20 shadow-inner' 
+              : 'text-brand-muted hover:text-white'
+          }`}
+        >
+          EN
+        </button>
+      </div>
+
       {/* Background Decorative Glows */}
       <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-status-red/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[450px] h-[450px] bg-status-orange/5 rounded-full blur-[120px] pointer-events-none" />
@@ -70,7 +108,7 @@ export const LoginPage: React.FC = () => {
             PartoCare
           </h2>
           <p className="mt-2 text-sm text-brand-muted">
-            Partogramme obstétrical numérique & référence d'urgence
+            {t('login_subtitle')}
           </p>
         </div>
 
@@ -87,7 +125,7 @@ export const LoginPage: React.FC = () => {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-brand-muted mb-2">
-                Adresse Email
+                {t('email')}
               </label>
               <input
                 id="email"
@@ -95,14 +133,14 @@ export const LoginPage: React.FC = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ex: sagefemme@partocare.cm"
+                placeholder={language === 'fr' ? 'ex: sagefemme@partocare.cm' : 'ex: midwife@partocare.cm'}
                 className="w-full px-4 py-3 bg-[#070b13] border border-brand-border/55 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-status-orange focus:ring-1 focus:ring-status-orange transition duration-150 text-sm"
               />
             </div>
 
             <div>
               <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-brand-muted mb-2">
-                Mot de passe
+                {t('password')}
               </label>
               <input
                 id="password"
@@ -124,7 +162,7 @@ export const LoginPage: React.FC = () => {
               ) : (
                 <>
                   <LogIn className="mr-2 h-4 w-4" />
-                  Se connecter
+                  {t('sign_in')}
                 </>
               )}
             </button>
@@ -133,7 +171,7 @@ export const LoginPage: React.FC = () => {
           {/* Quick simulation cards */}
           <div className="mt-8 pt-6 border-t border-brand-border/20">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
-              Comptes Démo (Connexion Rapide) :
+              {t('demo_accounts')}
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {quickRoles.map((role) => (
@@ -153,8 +191,8 @@ export const LoginPage: React.FC = () => {
 
         {/* Offline indicator footer notice */}
         <div className="text-center text-xs text-brand-muted leading-relaxed">
-          Application clinique conforme aux directives OMS.<br />
-          Fonctionnement hors-ligne autonome avec synchronisation outbox.
+          {t('oms_notice')}<br />
+          {t('offline_notice')}
         </div>
       </div>
     </div>
