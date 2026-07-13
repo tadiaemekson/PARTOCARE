@@ -112,21 +112,10 @@ Follow these steps to clone the repository and run both the frontend and backend
 - Build the static bundle: `npm run build`
 - Import the frontend project to Vercel, setting the framework preset to **Vite** and configuring the build outputs directory to `dist/`.
 
-### Backend (Shared Hosting / InfinityFree)
-Since SSH access is restricted on shared environments like InfinityFree:
-1. Install optimized production dependencies locally:
-   ```bash
-   composer install --no-dev --optimize-autoloader
-   ```
-2. Configure a root `.htaccess` inside `backend/` to rewrite traffic to the `public/` directory:
-   ```apache
-   <IfModule mod_rewrite.c>
-       RewriteEngine On
-       RewriteRule ^(.*)$ public/$1 [L]
-   </IfModule>
-   ```
-3. Upload all backend files to the server's `htdocs/` folder via FTP (e.g. FileZilla).
-4. Create and import your database schema using phpMyAdmin, and update the remote `.env` credentials.
+### Backend (Laravel Cloud)
+The backend service is hosted on **Laravel Cloud**:
+- **API Production Domain:** `https://partocare-production-vwfatb.laravel.cloud/`
+- Continuous deployment is handled automatically via Laravel Cloud integration, mapping repository pushes directly to serverless deployment environments.
 
 ---
 
