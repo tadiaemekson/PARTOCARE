@@ -1,4 +1,5 @@
 import { db, type SyncQueueItem } from './db';
+import { API_BASE_URL } from './config';
 
 type SyncListener = (isOnline: boolean, pendingCount: number) => void;
 
@@ -112,7 +113,7 @@ class SyncManager {
         return false;
       }
  
-      const response = await fetch('http://127.0.0.1:8000/api/v1/sync', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/sync`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

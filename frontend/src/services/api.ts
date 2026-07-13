@@ -1,6 +1,7 @@
 import { db, type Patient, type Pregnancy, type Labour, type Partogram, type PartogramEntry, type Referral, type Ambulance, type Alert, type Facility } from './db';
 import { evaluateClinicalRules } from './alertEngine';
 import { syncManager } from './sync';
+import { API_BASE_URL } from './config';
 
 // Simulates network latency
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -15,7 +16,7 @@ export const apiService = {
   async login(email: string, password?: string): Promise<{ token: string; user: any }> {
     if (this.isOnline()) {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/v1/auth/login', {
+        const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -106,7 +107,7 @@ export const apiService = {
       try {
         const token = localStorage.getItem('partocare_api_token');
         if (token) {
-          const response = await fetch('http://127.0.0.1:8000/api/v1/dashboard/stats', {
+          const response = await fetch(`${API_BASE_URL}/api/v1/dashboard/stats`, {
             headers: {
               'Authorization': `Bearer ${token}`,
               'Accept': 'application/json'
