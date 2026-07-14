@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, seedDatabase } from '../services/db';
+import { db } from '../services/db';
 import { syncManager } from '../services/sync';
 import { 
   Settings, Database, Server, Smartphone, 
@@ -68,11 +68,7 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  const handleSeedMock = async () => {
-    await seedDatabase();
-    setSuccessMsg('Données cliniques de démonstration chargées.');
-    setTimeout(() => setSuccessMsg(null), 3000);
-  };
+
 
   const handleForceSync = async () => {
     await syncManager.syncOutbox();
@@ -344,13 +340,7 @@ export const AdminPage: React.FC = () => {
                 <RefreshCw className="h-4 w-4 mr-2 text-status-orange" />
                 Forcer la Synchronisation
               </button>
-              <button
-                onClick={handleSeedMock}
-                className="w-full py-2.5 bg-slate-900 border border-brand-border/40 hover:bg-slate-800 rounded-xl text-xs font-bold text-white flex items-center justify-center transition"
-              >
-                <Server className="h-4 w-4 mr-2 text-status-green" />
-                Recharger données de Démo
-              </button>
+
               <button
                 onClick={handleResetDatabase}
                 className="w-full py-2.5 bg-status-red/10 border border-status-red/30 hover:bg-status-red/20 rounded-xl text-xs font-bold text-status-red flex items-center justify-center transition"

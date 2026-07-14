@@ -5,13 +5,13 @@ import { syncManager } from '../services/sync';
 import { db } from '../services/db';
 import { 
   Activity, Users, Send, BarChart2, Settings, LogOut, 
-  Menu, X, Bell, Wifi, WifiOff, RefreshCw, AlertTriangle, UserCheck
+  Menu, X, Bell, Wifi, WifiOff, RefreshCw, AlertTriangle
 } from 'lucide-react';
 import { ChatBot } from '../components/ChatBot';
 import { useLanguage } from '../contexts/LanguageContext';
 
 export const DashboardLayout: React.FC = () => {
-  const { user, logout, login } = useAuth();
+  const { user, logout } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,7 +22,7 @@ export const DashboardLayout: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [activeAlerts, setActiveAlerts] = useState<any[]>([]);
   const [showAlertDropdown, setShowAlertDropdown] = useState(false);
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+
 
   // Sync state tracking
   useEffect(() => {
@@ -68,15 +68,7 @@ export const DashboardLayout: React.FC = () => {
     setIsSyncing(false);
   };
 
-  const handleRoleChange = async (roleEmail: string) => {
-    try {
-      await login(roleEmail);
-      setShowRoleDropdown(false);
-      navigate('/');
-    } catch (err) {
-      console.error('Role switch failed:', err);
-    }
-  };
+
 
   const menuItems = [
     { name: t('dashboard'), path: '/', icon: Activity, roles: ['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER', 'SYSTEM_ADMIN', 'DISTRICT_ADMIN'] },
@@ -204,41 +196,7 @@ export const DashboardLayout: React.FC = () => {
               </button>
             </div>
 
-            {/* Quick Demo Role Switcher */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-brand-border/40 text-xs text-brand-muted hover:text-white hover:bg-slate-800 transition"
-                title="Changer de rôle clinique (Demo)"
-              >
-                <UserCheck className="h-4 w-4 text-status-orange" />
-                <span className="hidden sm:inline">Rôle Démo</span>
-              </button>
-              
-              {showRoleDropdown && (
-                <div className="absolute right-0 mt-2 w-56 rounded-xl glass-panel shadow-2xl py-1 z-50 border border-brand-border/50">
-                  <div className="px-4 py-2 border-b border-brand-border/20 text-xs font-semibold text-status-orange">
-                    Simuler un personnel :
-                  </div>
-                  {[
-                    { label: 'Sage-femme (Ndiki)', email: 'sagefemme@partocare.cm' },
-                    { label: 'Médecin Généraliste (Ndiki)', email: 'medecin@partocare.cm' },
-                    { label: 'Gynécologue (Hôp. Bafia)', email: 'gynecologue@partocare.cm' },
-                    { label: 'Maternity Manager (Ndiki)', email: 'responsable@partocare.cm' },
-                    { label: 'District Admin (Bafia)', email: 'district@partocare.cm' },
-                    { label: 'Admin Système', email: 'tadiaemekson@gmail.com' }
-                  ].map(r => (
-                    <button
-                      key={r.email}
-                      onClick={() => handleRoleChange(r.email)}
-                      className={`w-full text-left px-4 py-2 text-xs hover:bg-slate-800 transition ${user?.email === r.email ? 'text-status-orange font-bold' : 'text-slate-300'}`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+
 
             {/* Offline & Outbox Sync Indicator */}
             <div className="flex items-center space-x-2 bg-slate-900/50 border border-brand-border/20 px-3 py-1.5 rounded-lg">
