@@ -86,7 +86,7 @@ class DatabaseSeeder extends Seeder
             ['id' => 'u-physician', 'role_id' => 'r-physician', 'facility_id' => 'fac-ndiki', 'first_name' => 'Pierre', 'last_name' => 'Atangana', 'phone' => '+237678123456', 'email' => 'medecin@partocare.cm', 'password' => $hashedPassword, 'status' => 'ACTIVE'],
             ['id' => 'u-gynecologist', 'role_id' => 'r-gynecologist', 'facility_id' => 'fac-bafia', 'first_name' => 'Luc', 'last_name' => 'Mebara', 'phone' => '+237699223344', 'email' => 'gynecologue@partocare.cm', 'password' => $hashedPassword, 'status' => 'ACTIVE'],
             ['id' => 'u-manager', 'role_id' => 'r-manager', 'facility_id' => 'fac-ndiki', 'first_name' => 'Chantal', 'last_name' => 'Bella', 'phone' => '+237655889900', 'email' => 'responsable@partocare.cm', 'password' => $hashedPassword, 'status' => 'ACTIVE'],
-            ['id' => 'u-admin', 'role_id' => 'r-admin', 'facility_id' => 'fac-yaounde', 'first_name' => 'Paul', 'last_name' => 'Biya Jr', 'phone' => '+237699999999', 'email' => 'admin@partocare.cm', 'password' => $hashedPassword, 'status' => 'ACTIVE'],
+            ['id' => 'u-admin', 'role_id' => 'r-admin', 'facility_id' => 'fac-yaounde', 'first_name' => 'Emekson', 'last_name' => 'Tadia', 'phone' => '+237699999999', 'email' => 'tadiaemekson@gmail.com', 'password' => $hashedPassword, 'status' => 'ACTIVE'],
             ['id' => 'u-district', 'role_id' => 'r-district', 'facility_id' => 'fac-bafia', 'first_name' => 'Gaston', 'last_name' => 'Eloundou', 'phone' => '+237677777777', 'email' => 'district@partocare.cm', 'password' => $hashedPassword, 'status' => 'ACTIVE']
         ];
         foreach ($users as $usr) {

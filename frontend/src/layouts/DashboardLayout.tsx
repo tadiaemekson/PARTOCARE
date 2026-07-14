@@ -226,7 +226,7 @@ export const DashboardLayout: React.FC = () => {
                     { label: 'Gynécologue (Hôp. Bafia)', email: 'gynecologue@partocare.cm' },
                     { label: 'Maternity Manager (Ndiki)', email: 'responsable@partocare.cm' },
                     { label: 'District Admin (Bafia)', email: 'district@partocare.cm' },
-                    { label: 'Admin Système', email: 'admin@partocare.cm' }
+                    { label: 'Admin Système', email: 'tadiaemekson@gmail.com' }
                   ].map(r => (
                     <button
                       key={r.email}

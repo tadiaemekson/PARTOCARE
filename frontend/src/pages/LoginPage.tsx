@@ -63,7 +63,7 @@ export const LoginPage: React.FC = () => {
     { label: t('role_gynecologist'), email: 'gynecologue@partocare.cm', color: 'border-rose-500/20 hover:border-rose-500/50' },
     { label: t('role_manager'), email: 'responsable@partocare.cm', color: 'border-indigo-500/20 hover:border-indigo-500/50' },
     { label: t('role_district'), email: 'district@partocare.cm', color: 'border-orange-500/20 hover:border-orange-500/50' },
-    { label: t('role_admin'), email: 'admin@partocare.cm', color: 'border-slate-500/20 hover:border-slate-500/50' }
+    { label: t('role_admin'), email: 'tadiaemekson@gmail.com', color: 'border-slate-500/20 hover:border-slate-500/50' }
   ];
 
   return (

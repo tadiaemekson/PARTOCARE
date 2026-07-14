@@ -248,7 +248,7 @@ export async function seedDatabase() {
     { id: 'u-physician', role_id: 'r-physician', facility_id: 'fac-ndiki', first_name: 'Pierre', last_name: 'Atangana', phone: '+237678123456', email: 'medecin@partocare.cm', status: 1 },
     { id: 'u-gynecologist', role_id: 'r-gynecologist', facility_id: 'fac-bafia', first_name: 'Luc', last_name: 'Mebara', phone: '+237699223344', email: 'gynecologue@partocare.cm', status: 1 },
     { id: 'u-manager', role_id: 'r-manager', facility_id: 'fac-ndiki', first_name: 'Chantal', last_name: 'Bella', phone: '+237655889900', email: 'responsable@partocare.cm', status: 1 },
-    { id: 'u-admin', role_id: 'r-admin', facility_id: 'fac-yaounde', first_name: 'Paul', last_name: 'Biya Jr', phone: '+237699999999', email: 'admin@partocare.cm', status: 1 },
+    { id: 'u-admin', role_id: 'r-admin', facility_id: 'fac-yaounde', first_name: 'Emekson', last_name: 'Tadia', phone: '+237699999999', email: 'tadiaemekson@gmail.com', status: 1 },
     { id: 'u-district', role_id: 'r-district', facility_id: 'fac-bafia', first_name: 'Gaston', last_name: 'Eloundou', phone: '+237677777777', email: 'district@partocare.cm', status: 1 }
   ];
   await db.users.bulkAdd(users);
