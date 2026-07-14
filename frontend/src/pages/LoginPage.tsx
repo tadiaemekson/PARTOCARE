@@ -40,31 +40,7 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  const handleQuickLogin = async (quickEmail: string) => {
-    setError(null);
-    setLoading(true);
-    try {
-      await login(quickEmail);
-      navigate('/');
-    } catch (err: any) {
-      if (err.message === "Identifiants incorrects ou compte inexistant.") {
-        setError(t('auth_error'));
-      } else {
-        setError(err.message || t('auth_failed'));
-      }
-      setLoading(false);
-    }
-  };
 
-  const quickRoles = [
-    { label: t('role_midwife'), email: 'sagefemme@partocare.cm', color: 'border-emerald-500/20 hover:border-emerald-500/50' },
-    { label: t('role_nurse'), email: 'infirmier@partocare.cm', color: 'border-cyan-500/20 hover:border-cyan-500/50' },
-    { label: t('role_physician'), email: 'medecin@partocare.cm', color: 'border-amber-500/20 hover:border-amber-500/50' },
-    { label: t('role_gynecologist'), email: 'gynecologue@partocare.cm', color: 'border-rose-500/20 hover:border-rose-500/50' },
-    { label: t('role_manager'), email: 'responsable@partocare.cm', color: 'border-indigo-500/20 hover:border-indigo-500/50' },
-    { label: t('role_district'), email: 'district@partocare.cm', color: 'border-orange-500/20 hover:border-orange-500/50' },
-    { label: t('role_admin'), email: 'tadiaemekson@gmail.com', color: 'border-slate-500/20 hover:border-slate-500/50' }
-  ];
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-[#0b0f19] px-4 py-12 sm:px-6 lg:px-8 overflow-hidden font-sans">
@@ -168,25 +144,7 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Quick simulation cards */}
-          <div className="mt-8 pt-6 border-t border-brand-border/20">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
-              {t('demo_accounts')}
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {quickRoles.map((role) => (
-                <button
-                  key={role.email}
-                  onClick={() => handleQuickLogin(role.email)}
-                  disabled={loading}
-                  className={`text-left p-2.5 bg-[#0e1423] border ${role.color} rounded-xl text-xs transition duration-150 flex flex-col justify-between group disabled:opacity-50`}
-                >
-                  <span className="font-semibold text-white group-hover:text-status-orange transition truncate">{role.label}</span>
-                  <span className="text-[10px] text-brand-muted truncate">{role.email}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+
         </div>
 
         {/* Offline indicator footer notice */}
