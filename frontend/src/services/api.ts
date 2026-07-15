@@ -1,4 +1,4 @@
-import { db, type Patient, type Pregnancy, type Labour, type Partogram, type PartogramEntry, type Referral, type Ambulance, type Alert, type Facility } from './db';
+import { db, type Patient, type Pregnancy, type Labour, type Partogram, type PartogramEntry, type Referral, type Ambulance, type Alert, type Facility, type User } from './db';
 import { evaluateClinicalRules } from './alertEngine';
 import { syncManager } from './sync';
 import { API_BASE_URL } from './config';
@@ -572,6 +572,18 @@ export const apiService = {
 
   async createFacility(facilityData: Omit<Facility, 'id'>): Promise<Facility> {
     await delay(300);
+    
+    // Check uniqueness (name and coordinates)
+    const duplicate = await db.facilities
+      .where('name')
+      .equalsIgnoreCase(facilityData.name)
+      .filter(f => Number(f.latitude) === Number(facilityData.latitude) && Number(f.longitude) === Number(facilityData.longitude))
+      .first();
+      
+    if (duplicate) {
+      throw new Error("Une structure avec ce nom et ces coordonnées GPS existe déjà.");
+    }
+
     const id = 'fac-' + Math.random().toString(36).substr(2, 9);
     
     const newFacility: Facility = {
@@ -593,5 +605,51 @@ export const apiService = {
     }
 
     return newFacility;
+  },
+
+  async getUsers(): Promise<User[]> {
+    await delay(200);
+    return await db.users.toArray();
+  },
+
+  async createUser(userData: Omit<User, 'id' | 'status'> & { password?: string }): Promise<User> {
+    await delay(300);
+    
+    const duplicate = await db.users.where('email').equalsIgnoreCase(userData.email).first();
+    if (duplicate) {
+      throw new Error("Un membre du personnel avec cette adresse email existe déjà.");
+    }
+
+    const id = 'usr-' + Math.random().toString(36).substr(2, 9);
+    
+    const newUser: User = {
+      id,
+      role_id: userData.role_id,
+      facility_id: userData.facility_id,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      phone: userData.phone,
+      email: userData.email,
+      status: 1
+    };
+
+    await db.users.add(newUser);
+
+    await db.sync_queue.add({
+      action: 'CREATE_USER',
+      payload: {
+        ...newUser,
+        status: 'ACTIVE',
+        password: userData.password || 'password'
+      },
+      status: 'PENDING',
+      created_at: new Date().toISOString()
+    });
+
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
+
+    return newUser;
   }
 };

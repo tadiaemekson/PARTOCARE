@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Patient;
 use App\Models\Pregnancy;
 use App\Models\Facility;
+use App\Models\User;
 use App\Models\Labour;
 use App\Models\Partogram;
 use App\Models\PartogramEntry;
@@ -44,7 +45,21 @@ class SyncService
                 DB::transaction(function () use ($action, $payload) {
                     switch ($action) {
                         case 'CREATE_FACILITY':
+                            $exists = Facility::where('name', $payload['name'])
+                                ->where('latitude', $payload['latitude'])
+                                ->where('longitude', $payload['longitude'])
+                                ->exists();
+                            if ($exists) {
+                                throw new \Exception("Une structure avec ce nom et ces coordonnées GPS existe déjà.");
+                            }
                             Facility::firstOrCreate(['id' => $payload['id']], $payload);
+                            break;
+
+                        case 'CREATE_USER':
+                            if (isset($payload['password'])) {
+                                $payload['password'] = \Illuminate\Support\Facades\Hash::make($payload['password']);
+                            }
+                            User::firstOrCreate(['id' => $payload['id']], $payload);
                             break;
 
                         case 'CREATE_PATIENT':

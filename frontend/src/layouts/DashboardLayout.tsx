@@ -75,7 +75,7 @@ export const DashboardLayout: React.FC = () => {
     { name: t('patients'), path: '/patients', icon: Users, roles: ['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER'] },
     { name: t('referrals'), path: '/referrals', icon: Send, iconColor: 'text-status-orange', roles: ['MIDWIFE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER', 'DISTRICT_ADMIN'] },
     { name: t('reports'), path: '/stats', icon: BarChart2, roles: ['MATERNITY_MANAGER', 'DISTRICT_ADMIN', 'SYSTEM_ADMIN'] },
-    { name: t('admin'), path: '/admin', icon: Settings, roles: ['SYSTEM_ADMIN'] }
+    { name: t('admin'), path: '/admin', icon: Settings, roles: ['SYSTEM_ADMIN', 'MATERNITY_MANAGER'] }
   ].filter(item => user && item.roles.includes(user.role.name));
 
   const hasCriticalAlerts = activeAlerts.some(a => a.alert_level === 'RED');
