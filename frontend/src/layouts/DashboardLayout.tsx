@@ -145,10 +145,8 @@ export const DashboardLayout: React.FC = () => {
         
         {/* Logo and title */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-brand-border/30 bg-[#070b13]/40">
-          <Link to="/" className="flex items-center space-x-2.5">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-status-red to-status-orange flex items-center justify-center shadow-lg">
-              <Activity className="h-5 w-5 text-white" />
-            </div>
+          <Link to="/" className="flex items-center space-x-2">
+            <img src="/logo.png" alt="PartoCare Logo" className="h-8 object-contain" />
             <span className="text-lg font-black tracking-wider bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
               PartoCare
             </span>

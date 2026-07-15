@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Activity, ShieldAlert, LogIn } from 'lucide-react';
+import { ShieldAlert, LogIn } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -77,8 +77,8 @@ export const LoginPage: React.FC = () => {
         
         {/* Brand Banner */}
         <div className="text-center">
-          <div className="mx-auto h-14 w-14 rounded-2xl bg-gradient-to-tr from-status-red to-status-orange flex items-center justify-center shadow-xl">
-            <Activity className="h-8 w-8 text-white animate-pulse" />
+          <div className="mx-auto h-20 w-28 flex items-center justify-center">
+            <img src="/logo.png" alt="PartoCare Logo" className="h-full object-contain" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
             PartoCare
