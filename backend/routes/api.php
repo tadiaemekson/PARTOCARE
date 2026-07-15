@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     // Public authentication endpoint
     Route::post('/auth/login', [AuthController::class, 'login']);
+
+    // Temporary debug endpoint to check seeded users
+    Route::get('/debug-users', function() {
+        return \App\Models\User::all(['id', 'first_name', 'last_name', 'email', 'role_id']);
+    });
  
     // Protected clinical endpoints
     Route::middleware('auth:sanctum')->group(function () {
