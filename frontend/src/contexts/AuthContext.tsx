@@ -28,6 +28,7 @@ interface AuthContextType {
   login: (email: string) => Promise<SessionUser>;
   logout: () => void;
   hasRole: (roles: string[]) => boolean;
+  updateSessionUser: (updates: Partial<SessionUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -87,8 +88,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return allowedRoles.includes(user.role.name);
   };
 
+  const updateSessionUser = (updates: Partial<SessionUser>) => {
+    if (!user) return;
+    const updated = { ...user, ...updates };
+    setUser(updated);
+    localStorage.setItem('partocare_user', JSON.stringify(updated));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, hasRole }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, hasRole, updateSessionUser }}>
       {children}
     </AuthContext.Provider>
   );

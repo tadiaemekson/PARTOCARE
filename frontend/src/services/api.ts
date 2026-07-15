@@ -651,5 +651,98 @@ export const apiService = {
     }
 
     return newUser;
+  },
+
+  async updateFacility(facilityId: string, facilityData: Partial<Facility>): Promise<void> {
+    await delay(200);
+
+    if (facilityData.name || facilityData.latitude || facilityData.longitude) {
+      const current = await db.facilities.get(facilityId);
+      const testName = facilityData.name || current?.name || '';
+      const testLat = facilityData.latitude !== undefined ? facilityData.latitude : current?.latitude;
+      const testLng = facilityData.longitude !== undefined ? facilityData.longitude : current?.longitude;
+
+      const duplicate = await db.facilities
+        .where('name')
+        .equalsIgnoreCase(testName)
+        .filter(f => f.id !== facilityId && Number(f.latitude) === Number(testLat) && Number(f.longitude) === Number(testLng))
+        .first();
+
+      if (duplicate) {
+        throw new Error("Une structure avec ce nom et ces coordonnées GPS existe déjà.");
+      }
+    }
+
+    await db.facilities.update(facilityId, facilityData);
+
+    await db.sync_queue.add({
+      action: 'UPDATE_FACILITY',
+      payload: { id: facilityId, ...facilityData },
+      status: 'PENDING',
+      created_at: new Date().toISOString()
+    });
+
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
+  },
+
+  async deleteFacility(facilityId: string): Promise<void> {
+    await delay(200);
+
+    await db.facilities.delete(facilityId);
+
+    await db.sync_queue.add({
+      action: 'DELETE_FACILITY',
+      payload: { id: facilityId },
+      status: 'PENDING',
+      created_at: new Date().toISOString()
+    });
+
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
+  },
+
+  async updateUser(userId: string, userData: Partial<User> & { password?: string }): Promise<void> {
+    await delay(200);
+
+    if (userData.email) {
+      const duplicate = await db.users.where('email').equalsIgnoreCase(userData.email).filter(u => u.id !== userId).first();
+      if (duplicate) {
+        throw new Error("Un membre du personnel avec cette adresse email existe déjà.");
+      }
+    }
+
+    const { password, ...offlineData } = userData;
+    await db.users.update(userId, offlineData);
+
+    await db.sync_queue.add({
+      action: 'UPDATE_USER',
+      payload: { id: userId, ...userData },
+      status: 'PENDING',
+      created_at: new Date().toISOString()
+    });
+
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
+  },
+
+  async deleteUser(userId: string): Promise<void> {
+    await delay(200);
+
+    await db.users.delete(userId);
+
+    await db.sync_queue.add({
+      action: 'DELETE_USER',
+      payload: { id: userId },
+      status: 'PENDING',
+      created_at: new Date().toISOString()
+    });
+
+    if (this.isOnline()) {
+      syncManager.syncOutbox().catch(err => console.error("Immediate sync failed:", err));
+    }
   }
 };

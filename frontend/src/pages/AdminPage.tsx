@@ -5,7 +5,7 @@ import { syncManager } from '../services/sync';
 import { 
   Settings, Database, Server, Smartphone, 
   MapPin, CheckCircle, RefreshCw, Trash2, PlusCircle, Building,
-  UserPlus, Users
+  UserPlus, Users, Edit, X
 } from 'lucide-react';
 import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,7 +16,8 @@ export const AdminPage: React.FC = () => {
   const [syncUrl, setSyncUrl] = useState('https://partocare-production-vwfatb.laravel.cloud/');
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // New facility form state
+  // Facility edit/creation state
+  const [editingFacilityId, setEditingFacilityId] = useState<string | null>(null);
   const [facName, setFacName] = useState('');
   const [facType, setFacType] = useState('CMA');
   const [facRegion, setFacRegion] = useState('Centre');
@@ -26,7 +27,8 @@ export const AdminPage: React.FC = () => {
   const [facLat, setFacLat] = useState(4.67);
   const [facLng, setFacLng] = useState(11.23);
 
-  // New user form state
+  // User edit/creation state
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const [userFirstName, setUserFirstName] = useState('');
   const [userLastName, setUserLastName] = useState('');
@@ -56,7 +58,6 @@ export const AdminPage: React.FC = () => {
     if (user.role.name === 'SYSTEM_ADMIN') {
       return await db.users.toArray();
     } else {
-      // Hospital manager sees only their facility's staff
       return await db.users.where('facility_id').equals(user.facility.id).toArray();
     }
   }, [user]);
@@ -115,7 +116,7 @@ export const AdminPage: React.FC = () => {
     }
 
     try {
-      await apiService.createFacility({
+      const facilityData = {
         name: facName,
         type: facType,
         region: facRegion,
@@ -124,15 +125,23 @@ export const AdminPage: React.FC = () => {
         phone: facPhone,
         latitude: Number(facLat),
         longitude: Number(facLng)
-      });
+      };
 
-      setSuccessMsg(`Structure "${facName}" ajoutée avec succès et mise en attente de synchronisation.`);
+      if (editingFacilityId) {
+        await apiService.updateFacility(editingFacilityId, facilityData);
+        setSuccessMsg(`Structure "${facName}" mise à jour avec succès.`);
+        setEditingFacilityId(null);
+      } else {
+        await apiService.createFacility(facilityData);
+        setSuccessMsg(`Structure "${facName}" ajoutée avec succès.`);
+      }
+
       setFacName('');
       setFacAddress('');
       setFacPhone('');
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
-      console.error("Failed to register facility:", err);
+      console.error("Failed to save facility:", err);
       alert(err.message || "Erreur lors de l'enregistrement de la structure.");
     }
   };
@@ -151,17 +160,32 @@ export const AdminPage: React.FC = () => {
     }
 
     try {
-      await apiService.createUser({
+      const userData: any = {
         email: userEmail,
         first_name: userFirstName,
         last_name: userLastName,
         phone: userPhone,
-        password: userPassword || 'password',
         role_id: userRoleId,
         facility_id: targetFacilityId
-      });
+      };
 
-      setSuccessMsg(`Personnel "${userFirstName} ${userLastName}" enregistré avec succès.`);
+      if (userPassword.trim()) {
+        userData.password = userPassword;
+      }
+
+      if (editingUserId) {
+        await apiService.updateUser(editingUserId, userData);
+        setSuccessMsg(`Personnel "${userFirstName} ${userLastName}" mis à jour avec succès.`);
+        setEditingUserId(null);
+      } else {
+        if (!userPassword) {
+          alert("Le mot de passe est obligatoire pour la création d'un compte.");
+          return;
+        }
+        await apiService.createUser(userData);
+        setSuccessMsg(`Personnel "${userFirstName} ${userLastName}" enregistré avec succès.`);
+      }
+
       setUserEmail('');
       setUserFirstName('');
       setUserLastName('');
@@ -169,7 +193,7 @@ export const AdminPage: React.FC = () => {
       setUserPassword('');
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
-      console.error("Failed to register worker:", err);
+      console.error("Failed to save worker:", err);
       alert(err.message || "Erreur lors de l'enregistrement du personnel.");
     }
   };
@@ -187,7 +211,7 @@ export const AdminPage: React.FC = () => {
         </h1>
         <p className="text-sm text-brand-muted mt-1">
           {isSuperAdmin 
-            ? "Supervision globale, enregistrement des structures de santé et configuration système" 
+            ? "Supervision globale, gestion des structures de santé et configuration système" 
             : `Gestion des ressources et du personnel pour : ${user?.facility.name}`}
         </p>
       </div>
@@ -205,7 +229,7 @@ export const AdminPage: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           
           {/* WhatsApp Gateway Config (Super Admin Only) */}
-          {isSuperAdmin && (
+          {isSuperAdmin && !editingFacilityId && !editingUserId && (
             <div className="glass-panel border border-brand-border/40 rounded-2xl p-6">
               <h3 className="text-sm font-bold text-white mb-4 flex items-center">
                 <Smartphone className="h-5 w-5 text-status-orange mr-2" />
@@ -240,13 +264,29 @@ export const AdminPage: React.FC = () => {
             </div>
           )}
 
-          {/* Register New Facility Form (Super Admin Only) */}
+          {/* Register/Edit Facility Form (Super Admin Only) */}
           {isSuperAdmin && (
             <div className="glass-panel border border-brand-border/40 rounded-2xl p-6">
-              <h3 className="text-sm font-bold text-white mb-4 flex items-center">
-                <Building className="h-5 w-5 text-status-orange mr-2" />
-                Enregistrer une Nouvelle Structure Sanitaire
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-sm font-bold text-white flex items-center">
+                  <Building className="h-5 w-5 text-status-orange mr-2" />
+                  {editingFacilityId ? "Modifier la Structure Sanitaire" : "Enregistrer une Nouvelle Structure Sanitaire"}
+                </h3>
+                {editingFacilityId && (
+                  <button 
+                    onClick={() => {
+                      setEditingFacilityId(null);
+                      setFacName('');
+                      setFacAddress('');
+                      setFacPhone('');
+                    }}
+                    className="flex items-center space-x-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-brand-muted hover:text-white transition text-[10px]"
+                  >
+                    <X className="h-3 w-3" />
+                    <span>Annuler la modification</span>
+                  </button>
+                )}
+              </div>
               
               <form onSubmit={handleCreateFacility} className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -257,7 +297,7 @@ export const AdminPage: React.FC = () => {
                       value={facName}
                       onChange={e => setFacName(e.target.value)}
                       placeholder="ex: CSI de Ndiki Nord"
-                      className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                      className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-bold" 
                       required
                     />
                   </div>
@@ -266,7 +306,7 @@ export const AdminPage: React.FC = () => {
                     <select 
                       value={facType}
                       onChange={e => setFacType(e.target.value)}
-                      className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white"
+                      className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-medium"
                     >
                       <option value="CMA">CMA (Centre Médical d'Arrondissement)</option>
                       <option value="District Hospital">Hôpital de District (District Hospital)</option>
@@ -347,20 +387,38 @@ export const AdminPage: React.FC = () => {
                   </div>
                 </div>
 
-                <button type="submit" className="px-4 py-2 bg-gradient-to-tr from-status-red to-status-orange hover:brightness-110 text-xs font-bold text-white rounded-xl shadow-lg transition flex items-center">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Enregistrer la structure
+                <button type="submit" className="px-4 py-2.5 bg-gradient-to-tr from-status-red to-status-orange hover:brightness-110 text-xs font-bold text-white rounded-xl shadow-lg transition flex items-center">
+                  {editingFacilityId ? <Edit className="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />}
+                  {editingFacilityId ? "Sauvegarder les modifications" : "Enregistrer la structure"}
                 </button>
               </form>
             </div>
           )}
 
-          {/* Register New Clinical Worker Form (Super Admin & Facility Manager) */}
+          {/* Register/Edit Clinical Worker Form (Super Admin & Facility Manager) */}
           <div className="glass-panel border border-brand-border/40 rounded-2xl p-6">
-            <h3 className="text-sm font-bold text-white mb-4 flex items-center">
-              <UserPlus className="h-5 w-5 text-status-orange mr-2" />
-              Enregistrer un Nouveau Personnel
-            </h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-bold text-white flex items-center">
+                <UserPlus className="h-5 w-5 text-status-orange mr-2" />
+                {editingUserId ? "Modifier la Fiche du Personnel" : "Enregistrer un Nouveau Personnel"}
+              </h3>
+              {editingUserId && (
+                <button 
+                  onClick={() => {
+                    setEditingUserId(null);
+                    setUserEmail('');
+                    setUserFirstName('');
+                    setUserLastName('');
+                    setUserPhone('');
+                    setUserPassword('');
+                  }}
+                  className="flex items-center space-x-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-brand-muted hover:text-white transition text-[10px]"
+                >
+                  <X className="h-3 w-3" />
+                  <span>Annuler la modification</span>
+                </button>
+              )}
+            </div>
             
             <form onSubmit={handleCreateUser} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -396,7 +454,7 @@ export const AdminPage: React.FC = () => {
                     value={userEmail}
                     onChange={e => setUserEmail(e.target.value)}
                     placeholder="ex: personnel@partocare.cm"
-                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-bold" 
                     required
                   />
                 </div>
@@ -414,14 +472,16 @@ export const AdminPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Mot de passe temporaire *</label>
+                  <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">
+                    {editingUserId ? "Nouveau mot de passe (laisser vide si inchangé)" : "Mot de passe initial *"}
+                  </label>
                   <input 
                     type="password" 
                     value={userPassword}
                     onChange={e => setUserPassword(e.target.value)}
                     placeholder="password par défaut"
-                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white"
-                    required
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-mono"
+                    required={!editingUserId}
                   />
                 </div>
                 <div>
@@ -429,7 +489,7 @@ export const AdminPage: React.FC = () => {
                   <select 
                     value={userRoleId}
                     onChange={e => setUserRoleId(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-medium"
                   >
                     {roles?.filter(r => r.id !== 'r-admin').map(role => (
                       <option key={role.id} value={role.id}>{role.name} ({role.description.split(' : ')[0]})</option>
@@ -465,9 +525,9 @@ export const AdminPage: React.FC = () => {
                 </div>
               )}
 
-              <button type="submit" className="px-4 py-2 bg-gradient-to-tr from-status-red to-status-orange hover:brightness-110 text-xs font-bold text-white rounded-xl shadow-lg transition flex items-center">
-                <UserPlus className="h-4 w-4 mr-2" />
-                Enregistrer le personnel
+              <button type="submit" className="px-4 py-2.5 bg-gradient-to-tr from-status-red to-status-orange hover:brightness-110 text-xs font-bold text-white rounded-xl shadow-lg transition flex items-center">
+                {editingUserId ? <Edit className="h-4 w-4 mr-2" /> : <UserPlus className="h-4 w-4 mr-2" />}
+                {editingUserId ? "Sauvegarder les modifications" : "Enregistrer le personnel"}
               </button>
             </form>
           </div>
@@ -480,7 +540,7 @@ export const AdminPage: React.FC = () => {
                 Répertoire des Structures du District
               </h3>
 
-              <div className="divide-y divide-brand-border/20 text-xs">
+              <div className="divide-y divide-brand-border/20 text-xs space-y-2">
                 {facilities?.map(fac => (
                   <div key={fac.id} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center first:pt-0 last:pb-0 gap-3">
                     <div>
@@ -489,8 +549,45 @@ export const AdminPage: React.FC = () => {
                         Type : {fac.type} &bull; District : {fac.district} &bull; Contact : {fac.phone}
                       </p>
                     </div>
-                    <div className="flex items-center space-x-1.5 text-[10px] text-brand-muted font-mono bg-slate-950 px-2.5 py-1.5 rounded-lg border border-brand-border/15">
-                      <span>GPS: {fac.latitude.toFixed(4)}, {fac.longitude.toFixed(4)}</span>
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <div className="flex items-center space-x-1.5 text-[10px] text-brand-muted font-mono bg-slate-950 px-2.5 py-1.5 rounded-lg border border-brand-border/15">
+                        <span>GPS: {fac.latitude.toFixed(4)}, {fac.longitude.toFixed(4)}</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          setEditingFacilityId(fac.id);
+                          setFacName(fac.name);
+                          setFacType(fac.type);
+                          setFacRegion(fac.region);
+                          setFacDistrict(fac.district);
+                          setFacAddress(fac.address || '');
+                          setFacPhone(fac.phone);
+                          setFacLat(fac.latitude);
+                          setFacLng(fac.longitude);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="p-1.5 bg-slate-800 hover:bg-slate-700 text-sky-400 rounded-lg transition"
+                        title="Modifier"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          if (confirm(`Voulez-vous supprimer la structure "${fac.name}" ?`)) {
+                            try {
+                              await apiService.deleteFacility(fac.id);
+                              setSuccessMsg(`Structure "${fac.name}" supprimée.`);
+                              setTimeout(() => setSuccessMsg(null), 3000);
+                            } catch (err: any) {
+                              alert(err.message || "Erreur de suppression.");
+                            }
+                          }
+                        }}
+                        className="p-1.5 bg-status-red/10 hover:bg-status-red/20 text-status-red rounded-lg transition"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -510,12 +607,12 @@ export const AdminPage: React.FC = () => {
               Répertoire du Personnel ({staffUsers?.length || 0})
             </h3>
 
-            <div className="divide-y divide-brand-border/15 text-xs max-h-96 overflow-y-auto pr-1">
+            <div className="divide-y divide-brand-border/15 text-xs max-h-[500px] overflow-y-auto pr-1">
               {staffUsers?.map(u => {
                 const userRole = roles?.find(r => r.id === u.role_id);
                 const userFacility = facilities?.find(f => f.id === u.facility_id);
                 return (
-                  <div key={u.id} className="py-2.5 flex justify-between items-start first:pt-0 last:pb-0 gap-2">
+                  <div key={u.id} className="py-3 flex justify-between items-start first:pt-0 last:pb-0 gap-2">
                     <div className="min-w-0 flex-1">
                       <h4 className="font-bold text-white text-xs truncate">{u.first_name} {u.last_name}</h4>
                       <p className="text-[10px] text-brand-muted mt-0.5 truncate">{u.email}</p>
@@ -525,9 +622,51 @@ export const AdminPage: React.FC = () => {
                         </p>
                       )}
                     </div>
-                    <span className="shrink-0 px-2 py-0.5 rounded text-[9px] font-extrabold bg-slate-900 border border-brand-border/20 text-slate-300">
-                      {userRole?.name || 'AGENT'}
-                    </span>
+                    <div className="flex flex-col items-end space-y-1.5 shrink-0 ml-2">
+                      <span className="px-2 py-0.5 rounded text-[8px] font-extrabold bg-slate-900 border border-brand-border/20 text-slate-300">
+                        {userRole?.name || 'AGENT'}
+                      </span>
+                      <div className="flex items-center space-x-1">
+                        <button 
+                          onClick={() => {
+                            setEditingUserId(u.id);
+                            setUserFirstName(u.first_name);
+                            setUserLastName(u.last_name);
+                            setUserEmail(u.email);
+                            setUserPhone(u.phone || '');
+                            setUserPassword('');
+                            setUserRoleId(u.role_id);
+                            setUserFacilityId(u.facility_id);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className="p-1 hover:bg-slate-800 text-sky-400 rounded transition"
+                          title="Modifier"
+                        >
+                          <Edit className="h-3 w-3" />
+                        </button>
+                        <button 
+                          onClick={async () => {
+                            if (u.id === user?.id) {
+                              alert("Vous ne pouvez pas supprimer votre propre compte depuis ce répertoire. Utilisez plutôt le volet profil.");
+                              return;
+                            }
+                            if (confirm(`Voulez-vous supprimer le compte de "${u.first_name} ${u.last_name}" ?`)) {
+                              try {
+                                await apiService.deleteUser(u.id);
+                                setSuccessMsg(`Utilisateur "${u.first_name} ${u.last_name}" supprimé.`);
+                                setTimeout(() => setSuccessMsg(null), 3000);
+                              } catch (err: any) {
+                                alert(err.message || "Erreur de suppression.");
+                              }
+                            }
+                          }}
+                          className="p-1 hover:bg-status-red/10 text-status-red rounded transition"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

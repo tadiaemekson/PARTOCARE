@@ -8,6 +8,8 @@ export const translations = {
     admin: 'Administration',
     logout: 'Se déconnecter',
     connected_maternity: 'Maternité Connectée',
+    online: 'En ligne',
+    offline: 'Hors ligne',
     
     // Login page
     login_title: 'Connexion PartoCare',
@@ -193,6 +195,8 @@ export const translations = {
     admin: 'Administration',
     logout: 'Logout',
     connected_maternity: 'Connected Maternity',
+    online: 'Online',
+    offline: 'Offline',
     
     // Login page
     login_title: 'PartoCare Login',

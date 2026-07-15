@@ -62,6 +62,42 @@ class SyncService
                             User::firstOrCreate(['id' => $payload['id']], $payload);
                             break;
 
+                        case 'UPDATE_FACILITY':
+                            if (isset($payload['name']) || isset($payload['latitude']) || isset($payload['longitude'])) {
+                                $current = Facility::find($payload['id']);
+                                if ($current) {
+                                    $testName = $payload['name'] ?? $current->name;
+                                    $testLat = $payload['latitude'] ?? $current->latitude;
+                                    $testLng = $payload['longitude'] ?? $current->longitude;
+
+                                    $exists = Facility::where('name', $testName)
+                                        ->where('latitude', $testLat)
+                                        ->where('longitude', $testLng)
+                                        ->where('id', '!=', $payload['id'])
+                                        ->exists();
+                                    if ($exists) {
+                                        throw new \Exception("Une structure avec ce nom et ces coordonnées GPS existe déjà.");
+                                    }
+                                }
+                            }
+                            Facility::where('id', $payload['id'])->update($payload);
+                            break;
+
+                        case 'DELETE_FACILITY':
+                            Facility::where('id', $payload['id'])->delete();
+                            break;
+
+                        case 'UPDATE_USER':
+                            if (isset($payload['password'])) {
+                                $payload['password'] = \Illuminate\Support\Facades\Hash::make($payload['password']);
+                            }
+                            User::where('id', $payload['id'])->update($payload);
+                            break;
+
+                        case 'DELETE_USER':
+                            User::where('id', $payload['id'])->delete();
+                            break;
+
                         case 'CREATE_PATIENT':
                             Patient::firstOrCreate(['id' => $payload['id']], $payload);
                             break;
