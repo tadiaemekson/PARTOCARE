@@ -148,9 +148,14 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Offline indicator footer notice */}
-        <div className="text-center text-xs text-brand-muted leading-relaxed">
-          {t('oms_notice')}<br />
-          {t('offline_notice')}
+        <div className="text-center text-xs text-brand-muted leading-relaxed space-y-2">
+          <p>{t('oms_notice')}</p>
+          <p>{t('offline_notice')}</p>
+          <p className="text-[10px] text-brand-muted/40 pt-2 border-t border-brand-border/10">
+            {language === 'fr' 
+              ? 'Conçu et développé par Emekson Tadia (Super Admin)' 
+              : 'Designed and developed by Emekson Tadia (Super Admin)'}
+          </p>
         </div>
       </div>
     </div>
