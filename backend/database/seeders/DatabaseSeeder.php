@@ -75,7 +75,7 @@ class DatabaseSeeder extends Seeder
             ]
         ];
         foreach ($facilities as $fac) {
-            Facility::firstOrCreate(['id' => $fac['id']], $fac);
+            Facility::updateOrCreate(['id' => $fac['id']], $fac);
         }
  
         // 3. Users (Password is 'password')
@@ -90,7 +90,7 @@ class DatabaseSeeder extends Seeder
             ['id' => 'u-district', 'role_id' => 'r-district', 'facility_id' => 'fac-bafia', 'first_name' => 'Gaston', 'last_name' => 'Eloundou', 'phone' => '+237677777777', 'email' => 'district@partocare.cm', 'password' => $hashedPassword, 'status' => 'ACTIVE']
         ];
         foreach ($users as $usr) {
-            User::firstOrCreate(['id' => $usr['id']], $usr);
+            User::updateOrCreate(['id' => $usr['id']], $usr);
         }
  
         // 4. Ambulances
