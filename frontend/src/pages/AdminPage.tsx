@@ -37,10 +37,15 @@ export const AdminPage: React.FC = () => {
   const [userRoleId, setUserRoleId] = useState('r-midwife');
   const [userFacilityId, setUserFacilityId] = useState('');
 
-  // Set default facility if manager
+  // Set default facility and role constraints based on user role
   useEffect(() => {
-    if (user && user.role.name !== 'SYSTEM_ADMIN') {
-      setUserFacilityId(user.facility.id);
+    if (user) {
+      if (user.role.name === 'SYSTEM_ADMIN') {
+        setUserRoleId('r-manager');
+      } else {
+        setUserFacilityId(user.facility.id);
+        setUserRoleId('r-midwife');
+      }
     }
   }, [user]);
 
@@ -56,7 +61,8 @@ export const AdminPage: React.FC = () => {
   const staffUsers = useLiveQuery(async () => {
     if (!user) return [];
     if (user.role.name === 'SYSTEM_ADMIN') {
-      return await db.users.toArray();
+      const allUsers = await db.users.toArray();
+      return allUsers.filter(u => u.role_id === 'r-manager');
     } else {
       return await db.users.where('facility_id').equals(user.facility.id).toArray();
     }
@@ -491,7 +497,13 @@ export const AdminPage: React.FC = () => {
                     onChange={e => setUserRoleId(e.target.value)}
                     className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-medium"
                   >
-                    {roles?.filter(r => r.id !== 'r-admin').map(role => (
+                    {roles?.filter(r => {
+                      if (isSuperAdmin) {
+                        return r.id === 'r-manager';
+                      } else {
+                        return r.id !== 'r-admin';
+                      }
+                    }).map(role => (
                       <option key={role.id} value={role.id}>{role.name} ({role.description.split(' : ')[0]})</option>
                     ))}
                   </select>
@@ -673,24 +685,17 @@ export const AdminPage: React.FC = () => {
             </div>
           </div>
           
-          {/* IndexedDB Statistics (Super Admin Only) */}
+          {/* IndexedDB Statistics (Only show non-clinical queue and actions to super admin) */}
           {isSuperAdmin && (
             <div className="glass-panel border border-brand-border/40 rounded-2xl p-5 space-y-4">
               <h3 className="text-sm font-bold text-white flex items-center">
                 <Database className="h-5 w-5 text-status-orange mr-2" />
-                Console Base Locale (IndexedDB)
+                Console Synchro Locale
               </h3>
               
               <div className="divide-y divide-brand-border/10 text-xs space-y-2.5">
                 {[
-                  { name: 'Patientes enregistrées', count: dbCounts?.patients || 0 },
-                  { name: 'Dossiers grossesses', count: dbCounts?.pregnancies || 0 },
-                  { name: 'Sessions de travails', count: dbCounts?.labours || 0 },
-                  { name: 'Partogrammes tracés', count: dbCounts?.partograms || 0 },
-                  { name: 'Observations cliniques', count: dbCounts?.entries || 0 },
-                  { name: 'Alertes générées', count: dbCounts?.alerts || 0 },
-                  { name: 'Fiches de références', count: dbCounts?.referrals || 0 },
-                  { name: 'File de synchronisation', count: dbCounts?.syncQueue || 0, isQueue: true }
+                  { name: 'File d\'attente de synchronisation', count: dbCounts?.syncQueue || 0, isQueue: true }
                 ].map(item => (
                   <div key={item.name} className="flex justify-between items-center py-2 first:pt-0">
                     <span className="text-brand-muted">{item.name}</span>
@@ -715,7 +720,7 @@ export const AdminPage: React.FC = () => {
                   className="w-full py-2.5 bg-status-red/10 border border-status-red/30 hover:bg-status-red/20 rounded-xl text-xs font-bold text-status-red flex items-center justify-center transition"
                 >
                   <Trash2 className="h-4 w-4 mr-2 text-status-red" />
-                  Vider le Cache IndexedDB
+                  Réinitialiser la Base Locale
                 </button>
               </div>
             </div>

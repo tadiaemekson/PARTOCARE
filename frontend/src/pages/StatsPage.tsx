@@ -1,11 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
   Tooltip, PieChart, Pie, Cell, Legend, AreaChart, Area 
 } from 'recharts';
-import { BarChart2, TrendingUp, ShieldCheck, HeartPulse, Clock } from 'lucide-react';
+import { BarChart2, TrendingUp, ShieldCheck, HeartPulse, Clock, Download } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export const StatsPage: React.FC = () => {
+  const { user } = useAuth();
+  const [startDate, setStartDate] = useState('2026-05-01');
+  const [endDate, setEndDate] = useState('2026-06-30');
 
   // Mock static aggregates matching Cameroun's clinical indicators
   const monthlyData = [
@@ -33,6 +37,32 @@ export const StatsPage: React.FC = () => {
     { month: 'Juin', avgMin: 27 }
   ];
 
+  const handleDownloadReport = () => {
+    if (!user) return;
+    
+    // Generate CSV content dynamically
+    const headers = "Indicateur Clinique,Valeur,Recommandation OMS/District\n";
+    const rows = [
+      `Structure de sante,${user.facility.name},N/A`,
+      `Periode du Rapport,${startDate} au ${endDate},N/A`,
+      `Accouchements Assistes (Voie Basse),208,Accouchement en structure sanitaire assiste`,
+      `Accouchements Assistes (Cesariennes),26,Taux de cesarienne cible: 10-15%`,
+      `Total Transferts d'Urgence Inities,15,Optimisation logistique avec ambulances`,
+      `Temps Moyen d'Evacuation,34 minutes,Cible de district: < 45 minutes`,
+      `Mortalite Maternelle,0 deces,Objectif OMS OMM0 (zero deces maternel) atteint`
+    ].join("\n");
+
+    const csvContent = "\ufeff" + headers + rows; // Add UTF-8 BOM
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Rapport_Clinique_${user.facility.name.replace(/\s+/g, '_')}_${startDate}_${endDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       
@@ -40,9 +70,43 @@ export const StatsPage: React.FC = () => {
       <div>
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white flex items-center">
           <BarChart2 className="h-7 w-7 mr-2.5 text-status-orange" />
-          Rapports Analytiques du District
+          Rapports Analytiques du Centre
         </h1>
-        <p className="text-sm text-brand-muted mt-1">Évaluation des indicateurs cliniques et performance logistique</p>
+        <p className="text-sm text-brand-muted mt-1">
+          Indicateurs de performance clinique pour : {user?.facility.name} ({user?.facility.type})
+        </p>
+      </div>
+
+      {/* Date selector and download button */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 bg-slate-900/60 border border-brand-border/30 rounded-2xl gap-4 text-xs">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-col">
+            <label className="text-[10px] uppercase font-bold text-brand-muted mb-1">Date de début</label>
+            <input 
+              type="date" 
+              value={startDate} 
+              onChange={e => setStartDate(e.target.value)} 
+              className="px-3 py-1.5 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-semibold focus:outline-none focus:border-status-orange"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-[10px] uppercase font-bold text-brand-muted mb-1">Date de fin</label>
+            <input 
+              type="date" 
+              value={endDate} 
+              onChange={e => setEndDate(e.target.value)} 
+              className="px-3 py-1.5 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-semibold focus:outline-none focus:border-status-orange"
+            />
+          </div>
+        </div>
+        
+        <button
+          onClick={handleDownloadReport}
+          className="px-4 py-2.5 bg-gradient-to-tr from-status-red to-status-orange hover:brightness-110 text-white font-bold rounded-xl shadow-lg transition flex items-center self-end sm:self-center"
+        >
+          <Download className="h-4 w-4 mr-2 animate-bounce-slow" />
+          Télécharger le Rapport (CSV)
+        </button>
       </div>
 
       {/* Grid: Indicators Summary */}

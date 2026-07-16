@@ -30,6 +30,29 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+// Role-based protection route wrapper
+const RoleProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[] }> = ({ children, allowedRoles }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="h-screen w-screen flex items-center justify-center bg-[#0b0f19]">
+        <div className="h-10 w-10 border-4 border-status-orange border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!allowedRoles.includes(user.role.name)) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 export const App: React.FC = () => {
   return (
     <LanguageProvider>
@@ -48,12 +71,36 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             }
           >
-            <Route index element={<DashboardPage />} />
-            <Route path="patients" element={<PatientProfilePage />} />
-            <Route path="partogram/:labourId" element={<PartogramPage />} />
-            <Route path="referrals" element={<ReferralPage />} />
-            <Route path="stats" element={<StatsPage />} />
-            <Route path="admin" element={<AdminPage />} />
+            <Route index element={
+              <RoleProtectedRoute allowedRoles={['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER', 'DISTRICT_ADMIN']}>
+                <DashboardPage />
+              </RoleProtectedRoute>
+            } />
+            <Route path="patients" element={
+              <RoleProtectedRoute allowedRoles={['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER']}>
+                <PatientProfilePage />
+              </RoleProtectedRoute>
+            } />
+            <Route path="partogram/:labourId" element={
+              <RoleProtectedRoute allowedRoles={['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER']}>
+                <PartogramPage />
+              </RoleProtectedRoute>
+            } />
+            <Route path="referrals" element={
+              <RoleProtectedRoute allowedRoles={['MIDWIFE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER', 'DISTRICT_ADMIN']}>
+                <ReferralPage />
+              </RoleProtectedRoute>
+            } />
+            <Route path="stats" element={
+              <RoleProtectedRoute allowedRoles={['MATERNITY_MANAGER', 'DISTRICT_ADMIN']}>
+                <StatsPage />
+              </RoleProtectedRoute>
+            } />
+            <Route path="admin" element={
+              <RoleProtectedRoute allowedRoles={['SYSTEM_ADMIN', 'MATERNITY_MANAGER']}>
+                <AdminPage />
+              </RoleProtectedRoute>
+            } />
           </Route>
 
           {/* Fallback routing */}
