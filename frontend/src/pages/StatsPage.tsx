@@ -38,29 +38,7 @@ export const StatsPage: React.FC = () => {
   ];
 
   const handleDownloadReport = () => {
-    if (!user) return;
-    
-    // Generate CSV content dynamically
-    const headers = "Indicateur Clinique,Valeur,Recommandation OMS/District\n";
-    const rows = [
-      `Structure de sante,${user.facility.name},N/A`,
-      `Periode du Rapport,${startDate} au ${endDate},N/A`,
-      `Accouchements Assistes (Voie Basse),208,Accouchement en structure sanitaire assiste`,
-      `Accouchements Assistes (Cesariennes),26,Taux de cesarienne cible: 10-15%`,
-      `Total Transferts d'Urgence Inities,15,Optimisation logistique avec ambulances`,
-      `Temps Moyen d'Evacuation,34 minutes,Cible de district: < 45 minutes`,
-      `Mortalite Maternelle,0 deces,Objectif OMS OMM0 (zero deces maternel) atteint`
-    ].join("\n");
-
-    const csvContent = "\ufeff" + headers + rows; // Add UTF-8 BOM
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `Rapport_Clinique_${user.facility.name.replace(/\s+/g, '_')}_${startDate}_${endDate}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    window.print();
   };
 
   return (
@@ -78,7 +56,7 @@ export const StatsPage: React.FC = () => {
       </div>
 
       {/* Date selector and download button */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 bg-slate-900/60 border border-brand-border/30 rounded-2xl gap-4 text-xs">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 bg-slate-900/60 border border-brand-border/30 rounded-2xl gap-4 text-xs print-hidden">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-col">
             <label className="text-[10px] uppercase font-bold text-brand-muted mb-1">Date de début</label>
@@ -104,8 +82,8 @@ export const StatsPage: React.FC = () => {
           onClick={handleDownloadReport}
           className="px-4 py-2.5 bg-gradient-to-tr from-status-red to-status-orange hover:brightness-110 text-white font-bold rounded-xl shadow-lg transition flex items-center self-end sm:self-center"
         >
-          <Download className="h-4 w-4 mr-2 animate-bounce-slow" />
-          Télécharger le Rapport (CSV)
+          <Download className="h-4 w-4 mr-2" />
+          Télécharger le Rapport PDF
         </button>
       </div>
 

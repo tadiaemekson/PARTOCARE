@@ -5,7 +5,7 @@ import { apiService } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   Send, Truck, Phone, CheckCircle, 
-  ShieldAlert, ArrowRight
+  ShieldAlert, ArrowRight, Download
 } from 'lucide-react';
 
 export const ReferralPage: React.FC = () => {
@@ -75,7 +75,7 @@ export const ReferralPage: React.FC = () => {
     <div className="space-y-6 h-[calc(100vh-100px)] overflow-hidden flex flex-col">
       
       {/* Header */}
-      <div className="shrink-0">
+      <div className="shrink-0 print-hidden">
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white">Réseau de Référence Obstétricale</h1>
         <p className="text-sm text-brand-muted mt-1">Coordination des transferts critiques et régulation des ambulances</p>
       </div>
@@ -84,7 +84,7 @@ export const ReferralPage: React.FC = () => {
       <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column: Transfer Requests Directory (1 Column) */}
-        <div className="glass-panel rounded-2xl border border-brand-border/40 p-5 flex flex-col h-full lg:col-span-1">
+        <div className="glass-panel rounded-2xl border border-brand-border/40 p-5 flex flex-col h-full lg:col-span-1 print-hidden">
           <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar">
             
             {/* 1. Inbound Requests (Demandes Entrantes) */}
@@ -173,16 +173,25 @@ export const ReferralPage: React.FC = () => {
                   </p>
                 </div>
 
-                <span className={`px-3 py-1.5 rounded-xl text-xs font-black border uppercase tracking-wider ${
-                  selectedRef.referral_status === 'ADMITTED' ? 'bg-status-green/10 text-status-green border-status-green/30' :
-                  selectedRef.referral_status === 'IN_TRANSIT' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' :
-                  'bg-status-orange/10 text-status-orange border-status-orange/30 animate-pulse'
-                }`}>
-                  {selectedRef.referral_status === 'PENDING' ? 'En Attente de Validation' :
-                   selectedRef.referral_status === 'ACCEPTED' ? 'Demande Acceptée' :
-                   selectedRef.referral_status === 'IN_TRANSIT' ? 'En Transit (Ambulance)' :
-                   selectedRef.referral_status === 'ADMITTED' ? 'Patiente Admise' : 'Déclinée'}
-                </span>
+                <div className="flex items-center space-x-3 shrink-0 print-hidden">
+                  <button
+                    onClick={() => window.print()}
+                    className="px-3.5 py-1.5 bg-slate-900 border border-brand-border/40 hover:bg-slate-800 text-status-orange hover:text-white rounded-xl text-xs font-bold transition flex items-center"
+                  >
+                    <Download className="h-4 w-4 mr-1.5" />
+                    Fiche PDF
+                  </button>
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-black border uppercase tracking-wider ${
+                    selectedRef.referral_status === 'ADMITTED' ? 'bg-status-green/10 text-status-green border-status-green/30' :
+                    selectedRef.referral_status === 'IN_TRANSIT' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' :
+                    'bg-status-orange/10 text-status-orange border-status-orange/30 animate-pulse'
+                  }`}>
+                    {selectedRef.referral_status === 'PENDING' ? 'En Attente de Validation' :
+                     selectedRef.referral_status === 'ACCEPTED' ? 'Demande Acceptée' :
+                     selectedRef.referral_status === 'IN_TRANSIT' ? 'En Transit (Ambulance)' :
+                     selectedRef.referral_status === 'ADMITTED' ? 'Patiente Admise' : 'Déclinée'}
+                  </span>
+                </div>
               </div>
 
               {/* Patient clinical reasons */}
