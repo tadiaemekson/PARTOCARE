@@ -77,12 +77,12 @@ export const App: React.FC = () => {
               </RoleProtectedRoute>
             } />
             <Route path="patients" element={
-              <RoleProtectedRoute allowedRoles={['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER']}>
+              <RoleProtectedRoute allowedRoles={['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER', 'DISTRICT_ADMIN']}>
                 <PatientProfilePage />
               </RoleProtectedRoute>
             } />
             <Route path="partogram/:labourId" element={
-              <RoleProtectedRoute allowedRoles={['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER']}>
+              <RoleProtectedRoute allowedRoles={['MIDWIFE', 'NURSE', 'PHYSICIAN', 'GYNECOLOGIST', 'MATERNITY_MANAGER', 'DISTRICT_ADMIN']}>
                 <PartogramPage />
               </RoleProtectedRoute>
             } />
@@ -97,7 +97,7 @@ export const App: React.FC = () => {
               </RoleProtectedRoute>
             } />
             <Route path="admin" element={
-              <RoleProtectedRoute allowedRoles={['SYSTEM_ADMIN', 'MATERNITY_MANAGER']}>
+              <RoleProtectedRoute allowedRoles={['SYSTEM_ADMIN', 'MATERNITY_MANAGER', 'DISTRICT_ADMIN']}>
                 <AdminPage />
               </RoleProtectedRoute>
             } />
