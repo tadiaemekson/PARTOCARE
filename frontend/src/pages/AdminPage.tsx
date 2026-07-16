@@ -53,6 +53,14 @@ export const AdminPage: React.FC = () => {
   const [userRoleId, setUserRoleId] = useState('r-midwife');
   const [userFacilityId, setUserFacilityId] = useState('');
 
+  // Safety confirmation modal state for critical deletion
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
+    type: 'facility' | 'user';
+    id: string;
+    targetName: string;
+  } | null>(null);
+  const [deleteTypedConfirm, setDeleteTypedConfirm] = useState('');
+
   // Set default facility and role constraints based on user role
   useEffect(() => {
     if (user) {
@@ -264,6 +272,26 @@ export const AdminPage: React.FC = () => {
     } catch (err: any) {
       console.error("Failed to save worker:", err);
       alert(err.message || "Erreur lors de l'enregistrement du personnel.");
+    }
+  };
+
+  const handleExecuteDelete = async () => {
+    if (!deleteConfirmModal) return;
+    const { type, id, targetName } = deleteConfirmModal;
+
+    try {
+      if (type === 'facility') {
+        await apiService.deleteFacility(id);
+        setSuccessMsg(`Structure "${targetName}" supprimée avec succès.`);
+      } else {
+        await apiService.deleteUser(id);
+        setSuccessMsg(`Personnel "${targetName}" supprimé avec succès.`);
+      }
+      setDeleteConfirmModal(null);
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch (err: any) {
+      console.error("Deletion error:", err);
+      alert(err.message || "Erreur lors de la suppression.");
     }
   };
 
@@ -637,16 +665,13 @@ export const AdminPage: React.FC = () => {
                             <Edit className="h-3 w-3" />
                           </button>
                           <button 
-                            onClick={async () => {
-                              if (confirm(`Voulez-vous supprimer la structure "${fac.name}" ?`)) {
-                                try {
-                                  await apiService.deleteFacility(fac.id);
-                                  setSuccessMsg(`Structure "${fac.name}" supprimée.`);
-                                  setTimeout(() => setSuccessMsg(null), 3000);
-                                } catch (err: any) {
-                                  alert(err.message || "Erreur de suppression.");
-                                }
-                              }
+                            onClick={() => {
+                              setDeleteConfirmModal({
+                                type: 'facility',
+                                id: fac.id,
+                                targetName: fac.name
+                              });
+                              setDeleteTypedConfirm('');
                             }}
                             className="p-1.5 hover:bg-status-red/10 text-status-red rounded transition"
                             title="Supprimer"
@@ -891,20 +916,17 @@ export const AdminPage: React.FC = () => {
                               <Edit className="h-3 w-3" />
                             </button>
                             <button 
-                              onClick={async () => {
+                              onClick={() => {
                                 if (u.id === user?.id) {
                                   alert("Vous ne pouvez pas supprimer votre propre compte depuis ce répertoire. Utilisez plutôt le volet profil.");
                                   return;
                                 }
-                                if (confirm(`Voulez-vous supprimer le compte de "${u.first_name} ${u.last_name}" ?`)) {
-                                  try {
-                                    await apiService.deleteUser(u.id);
-                                    setSuccessMsg(`Utilisateur "${u.first_name} ${u.last_name}" supprimé.`);
-                                    setTimeout(() => setSuccessMsg(null), 3000);
-                                  } catch (err: any) {
-                                    alert(err.message || "Erreur de suppression.");
-                                  }
-                                }
+                                setDeleteConfirmModal({
+                                  type: 'user',
+                                  id: u.id,
+                                  targetName: `${u.first_name} ${u.last_name}`
+                                });
+                                setDeleteTypedConfirm('');
                               }}
                               className="p-1 hover:bg-status-red/10 text-status-red rounded transition"
                               title="Supprimer"
@@ -1033,6 +1055,55 @@ export const AdminPage: React.FC = () => {
         )}
 
       </div>
+
+      {/* Safety Deletion Confirmation Modal */}
+      {deleteConfirmModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="glass-panel border border-brand-border/40 rounded-2xl max-w-md w-full p-6 space-y-4 text-xs text-left">
+            <div className="flex items-center space-x-2.5 text-status-red">
+              <Trash2 className="h-6 w-6 animate-pulse" />
+              <h3 className="text-sm font-bold text-white">Confirmation de Suppression Critique</h3>
+            </div>
+            
+            <p className="text-brand-muted leading-relaxed">
+              Attention : Cette action est définitive et irréversible. Les données associées seront supprimées en local et synchronisées sur le serveur central.
+            </p>
+            
+            <div className="p-3.5 bg-status-red/10 border border-status-red/20 text-status-red rounded-xl leading-normal">
+              Pour confirmer la suppression de <strong>{deleteConfirmModal.targetName}</strong>, veuillez saisir son nom exact ci-dessous.
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[10px] uppercase font-bold text-brand-muted">Saisir le nom exact pour confirmer</label>
+              <input 
+                type="text" 
+                value={deleteTypedConfirm}
+                onChange={e => setDeleteTypedConfirm(e.target.value)}
+                placeholder={deleteConfirmModal.targetName}
+                className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-bold placeholder-slate-700 focus:outline-none focus:border-status-red" 
+              />
+            </div>
+
+            <div className="pt-2 flex space-x-3">
+              <button 
+                type="button" 
+                onClick={() => setDeleteConfirmModal(null)}
+                className="flex-1 py-2.5 bg-slate-900 border border-brand-border/40 hover:bg-slate-800 rounded-xl text-white font-bold transition"
+              >
+                Annuler
+              </button>
+              <button 
+                type="button"
+                disabled={deleteTypedConfirm.trim() !== deleteConfirmModal.targetName.trim()}
+                onClick={handleExecuteDelete}
+                className="flex-1 py-2.5 bg-status-red text-white font-bold rounded-xl shadow-lg transition hover:brightness-110 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:brightness-100"
+              >
+                Confirmer la suppression
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
