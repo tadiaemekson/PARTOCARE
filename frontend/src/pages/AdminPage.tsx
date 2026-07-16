@@ -312,7 +312,7 @@ export const AdminPage: React.FC = () => {
 
             {/* Sub-view Rendering */}
             {hospitalSubView === 'form' ? (
-              <div className="max-w-3xl">
+              <div className="w-full">
                 <div className="glass-panel border border-brand-border/40 rounded-2xl p-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-sm font-bold text-white flex items-center">
@@ -443,7 +443,7 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="max-w-4xl glass-panel border border-brand-border/40 rounded-2xl p-6">
+              <div className="w-full glass-panel border border-brand-border/40 rounded-2xl p-6">
                 <h3 className="text-sm font-bold text-white mb-4 flex items-center">
                   <MapPin className="h-5 w-5 text-sky-400 mr-2" />
                   Répertoire des Structures
@@ -548,7 +548,7 @@ export const AdminPage: React.FC = () => {
 
             {/* Sub-view Rendering */}
             {workerSubView === 'form' ? (
-              <div className="max-w-3xl">
+              <div className="w-full">
                 <div className="glass-panel border border-brand-border/40 rounded-2xl p-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-sm font-bold text-white flex items-center">
@@ -693,7 +693,7 @@ export const AdminPage: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="max-w-4xl glass-panel border border-brand-border/40 rounded-2xl p-5 space-y-4">
+              <div className="w-full glass-panel border border-brand-border/40 rounded-2xl p-5 space-y-4">
                 <h3 className="text-sm font-bold text-white flex items-center">
                   <Users className="h-5 w-5 text-sky-400 mr-2" />
                   Répertoire du Personnel ({staffUsers?.length || 0})
@@ -771,7 +771,7 @@ export const AdminPage: React.FC = () => {
 
         {/* TAB 3: WhatsApp Configuration */}
         {isSuperAdmin && activeTab === 'whatsapp' && (
-          <div className="max-w-3xl glass-panel border border-brand-border/40 rounded-2xl p-6">
+          <div className="w-full glass-panel border border-brand-border/40 rounded-2xl p-6">
             <h3 className="text-sm font-bold text-white mb-4 flex items-center">
               <Smartphone className="h-5 w-5 text-status-orange mr-2" />
               Configuration Passerelle WhatsApp Business
