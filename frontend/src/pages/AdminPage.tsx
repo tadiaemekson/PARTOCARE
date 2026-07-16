@@ -36,6 +36,13 @@ export const AdminPage: React.FC = () => {
   const [facLat, setFacLat] = useState(4.67);
   const [facLng, setFacLng] = useState(11.23);
 
+  // Facility Manager (Director) associated fields
+  const [mgrFirstName, setMgrFirstName] = useState('');
+  const [mgrLastName, setMgrLastName] = useState('');
+  const [mgrEmail, setMgrEmail] = useState('');
+  const [mgrPhone, setMgrPhone] = useState('');
+  const [mgrPassword, setMgrPassword] = useState('');
+
   // User edit/creation state
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState('');
@@ -129,6 +136,10 @@ export const AdminPage: React.FC = () => {
       alert("Le nom de la structure est requis.");
       return;
     }
+    if (!mgrEmail.trim() || !mgrFirstName.trim() || !mgrLastName.trim()) {
+      alert("L'adresse email, le prénom et le nom du Directeur/Manager sont requis.");
+      return;
+    }
 
     try {
       const facilityData = {
@@ -143,17 +154,58 @@ export const AdminPage: React.FC = () => {
       };
 
       if (editingFacilityId) {
+        // 1. Update facility
         await apiService.updateFacility(editingFacilityId, facilityData);
-        setSuccessMsg(`Structure "${facName}" mise à jour avec succès.`);
+        
+        // 2. Update or create associated Manager
+        const existingManager = await db.users.where({ facility_id: editingFacilityId, role_id: 'r-manager' }).first();
+        const managerData: any = {
+          email: mgrEmail,
+          first_name: mgrFirstName,
+          last_name: mgrLastName,
+          phone: mgrPhone,
+          role_id: 'r-manager',
+          facility_id: editingFacilityId
+        };
+        if (mgrPassword.trim()) {
+          managerData.password = mgrPassword;
+        }
+
+        if (existingManager) {
+          await apiService.updateUser(existingManager.id, managerData);
+        } else {
+          await apiService.createUser(managerData);
+        }
+
+        setSuccessMsg(`Structure "${facName}" et son Directeur mis à jour.`);
         setEditingFacilityId(null);
       } else {
-        await apiService.createFacility(facilityData);
-        setSuccessMsg(`Structure "${facName}" ajoutée avec succès.`);
+        // 1. Create facility
+        const newFac = await apiService.createFacility(facilityData);
+        
+        // 2. Create associated Manager
+        const managerData = {
+          email: mgrEmail,
+          first_name: mgrFirstName,
+          last_name: mgrLastName,
+          phone: mgrPhone,
+          role_id: 'r-manager',
+          facility_id: newFac.id,
+          password: mgrPassword || 'password'
+        };
+        await apiService.createUser(managerData);
+
+        setSuccessMsg(`Structure "${facName}" enregistrée avec son Directeur.`);
       }
 
       setFacName('');
       setFacAddress('');
       setFacPhone('');
+      setMgrFirstName('');
+      setMgrLastName('');
+      setMgrEmail('');
+      setMgrPhone('');
+      setMgrPassword('');
       setHospitalSubView('list'); // Return to list view
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
@@ -299,6 +351,11 @@ export const AdminPage: React.FC = () => {
                   setFacName('');
                   setFacAddress('');
                   setFacPhone('');
+                  setMgrFirstName('');
+                  setMgrLastName('');
+                  setMgrEmail('');
+                  setMgrPhone('');
+                  setMgrPassword('');
                 }}
                 className={`flex-1 py-2 rounded-lg text-xs font-extrabold transition ${
                   hospitalSubView === 'form' 
@@ -326,6 +383,11 @@ export const AdminPage: React.FC = () => {
                           setFacName('');
                           setFacAddress('');
                           setFacPhone('');
+                          setMgrFirstName('');
+                          setMgrLastName('');
+                          setMgrEmail('');
+                          setMgrPhone('');
+                          setMgrPassword('');
                           setHospitalSubView('list');
                         }}
                         className="flex items-center space-x-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-brand-muted hover:text-white transition text-[10px]"
@@ -336,108 +398,184 @@ export const AdminPage: React.FC = () => {
                     )}
                   </div>
                   
-                  <form onSubmit={handleCreateFacility} className="space-y-4 text-xs">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Nom de la structure *</label>
-                        <input 
-                          type="text" 
-                          value={facName}
-                          onChange={e => setFacName(e.target.value)}
-                          placeholder="ex: CSI de Ndiki Nord"
-                          className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-bold" 
-                          required
-                        />
+                  <form onSubmit={handleCreateFacility} className="space-y-6 text-xs">
+                    {/* Part 1: Hospital General details */}
+                    <div className="space-y-4">
+                      <h4 className="text-xs uppercase font-extrabold text-sky-400 tracking-wider">
+                        Informations de l'Établissement Sanitaire
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Nom de la structure *</label>
+                          <input 
+                            type="text" 
+                            value={facName}
+                            onChange={e => setFacName(e.target.value)}
+                            placeholder="ex: CSI de Ndiki Nord"
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-bold" 
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Type de structure</label>
+                          <select 
+                            value={facType}
+                            onChange={e => setFacType(e.target.value)}
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-medium"
+                          >
+                            <option value="CMA">CMA (Centre Médical d'Arrondissement)</option>
+                            <option value="District Hospital">Hôpital de District (District Hospital)</option>
+                            <option value="Regional Hospital">Hôpital Régional (Regional Hospital)</option>
+                            <option value="Clinic">Clinique Privée / Autre</option>
+                          </select>
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Type de structure</label>
-                        <select 
-                          value={facType}
-                          onChange={e => setFacType(e.target.value)}
-                          className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-medium"
-                        >
-                          <option value="CMA">CMA (Centre Médical d'Arrondissement)</option>
-                          <option value="District Hospital">Hôpital de District (District Hospital)</option>
-                          <option value="Regional Hospital">Hôpital Régional (Regional Hospital)</option>
-                          <option value="Clinic">Clinique Privée / Autre</option>
-                        </select>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Région</label>
+                          <input 
+                            type="text" 
+                            value={facRegion}
+                            onChange={e => setFacRegion(e.target.value)}
+                            placeholder="ex: Centre"
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">District Sanitaire</label>
+                          <input 
+                            type="text" 
+                            value={facDistrict}
+                            onChange={e => setFacDistrict(e.target.value)}
+                            placeholder="ex: Bafia"
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Téléphone contact</label>
+                          <input 
+                            type="text" 
+                            value={facPhone}
+                            onChange={e => setFacPhone(e.target.value)}
+                            placeholder="ex: +237622112233"
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Adresse / Localisation</label>
+                          <input 
+                            type="text" 
+                            value={facAddress}
+                            onChange={e => setFacAddress(e.target.value)}
+                            placeholder="ex: Ndiki Ville, face Eglise"
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-bold" 
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Latitude (GPS) *</label>
+                          <input 
+                            type="number" 
+                            step="0.000001"
+                            value={facLat}
+                            onChange={e => setFacLat(Number(e.target.value))}
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-mono" 
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Longitude (GPS) *</label>
+                          <input 
+                            type="number" 
+                            step="0.000001"
+                            value={facLng}
+                            onChange={e => setFacLng(Number(e.target.value))}
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-mono" 
+                            required
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Région</label>
-                        <input 
-                          type="text" 
-                          value={facRegion}
-                          onChange={e => setFacRegion(e.target.value)}
-                          placeholder="ex: Centre"
-                          className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
-                        />
+                    {/* Part 2: Associated Hospital Manager details */}
+                    <div className="border-t border-brand-border/20 pt-5 space-y-4">
+                      <h4 className="text-xs uppercase font-extrabold text-status-orange tracking-wider">
+                        Directeur de l'Établissement (Maternity Manager)
+                      </h4>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Prénom du Directeur *</label>
+                          <input 
+                            type="text" 
+                            value={mgrFirstName}
+                            onChange={e => setMgrFirstName(e.target.value)}
+                            placeholder="ex: Chantal"
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-bold" 
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Nom du Directeur *</label>
+                          <input 
+                            type="text" 
+                            value={mgrLastName}
+                            onChange={e => setMgrLastName(e.target.value)}
+                            placeholder="ex: Bella"
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-bold" 
+                            required
+                          />
+                        </div>
                       </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Adresse Email du Directeur *</label>
+                          <input 
+                            type="email" 
+                            value={mgrEmail}
+                            onChange={e => setMgrEmail(e.target.value)}
+                            placeholder="ex: responsable@partocare.cm"
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-bold" 
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Téléphone du Directeur</label>
+                          <input 
+                            type="text" 
+                            value={mgrPhone}
+                            onChange={e => setMgrPhone(e.target.value)}
+                            placeholder="ex: +237655889900"
+                            className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                          />
+                        </div>
+                      </div>
+
                       <div>
-                        <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">District Sanitaire</label>
+                        <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">
+                          {editingFacilityId ? "Nouveau mot de passe du Directeur (laisser vide si inchangé)" : "Mot de passe initial du Directeur *"}
+                        </label>
                         <input 
-                          type="text" 
-                          value={facDistrict}
-                          onChange={e => setFacDistrict(e.target.value)}
-                          placeholder="ex: Bafia"
-                          className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
+                          type="password" 
+                          value={mgrPassword}
+                          onChange={e => setMgrPassword(e.target.value)}
+                          placeholder="Mot de passe temporaire"
+                          className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-mono"
+                          required={!editingFacilityId}
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Téléphone contact</label>
-                        <input 
-                          type="text" 
-                          value={facPhone}
-                          onChange={e => setFacPhone(e.target.value)}
-                          placeholder="ex: +237622112233"
-                          className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white" 
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Adresse / Localisation</label>
-                        <input 
-                          type="text" 
-                          value={facAddress}
-                          onChange={e => setFacAddress(e.target.value)}
-                          placeholder="ex: Ndiki Ville, face Eglise"
-                          className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-bold" 
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Latitude (GPS) *</label>
-                        <input 
-                          type="number" 
-                          step="0.000001"
-                          value={facLat}
-                          onChange={e => setFacLat(Number(e.target.value))}
-                          className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-mono" 
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-brand-muted mb-1.5">Longitude (GPS) *</label>
-                        <input 
-                          type="number" 
-                          step="0.000001"
-                          value={facLng}
-                          onChange={e => setFacLng(Number(e.target.value))}
-                          className="w-full px-3 py-2 bg-[#070b13] border border-brand-border/40 rounded-lg text-white font-mono" 
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <button type="submit" className="px-4 py-2.5 bg-gradient-to-tr from-status-red to-status-orange hover:brightness-110 text-xs font-bold text-white rounded-xl shadow-lg transition flex items-center">
+                    <button type="submit" className="w-full py-3 bg-gradient-to-tr from-status-red to-status-orange hover:brightness-110 text-xs font-bold text-white rounded-xl shadow-lg transition flex items-center justify-center">
                       {editingFacilityId ? <Edit className="h-4 w-4 mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />}
-                      {editingFacilityId ? "Sauvegarder les modifications" : "Enregistrer la structure"}
+                      {editingFacilityId ? "Sauvegarder les modifications" : "Enregistrer la structure et son Directeur"}
                     </button>
                   </form>
                 </div>
@@ -465,7 +603,7 @@ export const AdminPage: React.FC = () => {
                         </span>
                         <div className="flex items-center space-x-1.5">
                           <button 
-                            onClick={() => {
+                            onClick={async () => {
                               setEditingFacilityId(fac.id);
                               setFacName(fac.name);
                               setFacType(fac.type);
@@ -475,6 +613,22 @@ export const AdminPage: React.FC = () => {
                               setFacPhone(fac.phone);
                               setFacLat(fac.latitude);
                               setFacLng(fac.longitude);
+                              
+                              // Load manager details
+                              const mgr = await db.users.where({ facility_id: fac.id, role_id: 'r-manager' }).first();
+                              if (mgr) {
+                                setMgrFirstName(mgr.first_name);
+                                setMgrLastName(mgr.last_name);
+                                setMgrEmail(mgr.email);
+                                setMgrPhone(mgr.phone || '');
+                                setMgrPassword('');
+                              } else {
+                                setMgrFirstName('');
+                                setMgrLastName('');
+                                setMgrEmail('');
+                                setMgrPhone('');
+                                setMgrPassword('');
+                              }
                               setHospitalSubView('form'); // Toggle view
                             }}
                             className="p-1.5 hover:bg-slate-800 text-sky-400 rounded transition"
